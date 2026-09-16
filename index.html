@@ -13,6 +13,7 @@
     href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap"
     rel="stylesheet"
   >
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
   <link rel="stylesheet" href="style.css">
 </head>
@@ -34,43 +35,55 @@
       </div>
 
 
-      <nav class="nav-menu">
+    <nav class="nav-menu">
 
-        <a href="#" class="nav-item active">
-          <span class="nav-icon">⌂</span>
-          <span>今日門診</span>
-        </a>
+  <a
+    href="#"
+    class="nav-item active"
+    data-nav-filter="all"
+  >
+    <i class="bi bi-calendar2-week nav-icon"></i>
+    <span>今日門診</span>
+  </a>
 
-        <a href="#" class="nav-item">
-          <span class="nav-icon">◎</span>
-          <span>所有個案</span>
-        </a>
+  <a
+    href="#"
+    class="nav-item"
+    data-nav-filter="all"
+  >
+    <i class="bi bi-people nav-icon"></i>
+    <span>所有個案</span>
+  </a>
 
-        <a href="#" class="nav-item">
-          <span class="nav-icon">△</span>
-          <span>需關注</span>
-        </a>
+  <a
+    href="#"
+    class="nav-item"
+    data-nav-filter="attention"
+  >
+    <i class="bi bi-exclamation-triangle nav-icon"></i>
+    <span>需關注</span>
+  </a>
 
-        <a href="#" class="nav-item">
-          <span class="nav-icon">▣</span>
-          <span>院所管理</span>
-        </a>
+  <a href="#" class="nav-item">
+    <i class="bi bi-hospital nav-icon"></i>
+    <span>院所管理</span>
+  </a>
 
-      </nav>
+</nav>
 
 
       <div class="sidebar-bottom">
 
         <div class="clinic-info">
           <span class="clinic-label">目前院所</span>
-          <strong>心晴身心診所</strong>
+          <strong>心域身心診所</strong>
         </div>
 
         <div class="doctor-profile">
-          <div class="doctor-avatar">陳</div>
+          <div class="doctor-avatar">吳</div>
 
           <div>
-            <strong>陳醫師</strong>
+            <strong>吳醫師</strong>
             <span>精神科</span>
           </div>
         </div>
@@ -116,97 +129,133 @@
       <!-- Summary cards -->
       <section class="summary-grid">
 
-        <article class="summary-card">
+  <!-- 今日掛號 -->
+  <article
+    class="summary-card clickable-summary"
+    data-summary-filter="all"
+    role="button"
+    tabindex="0"
+  >
 
-          <div class="summary-card-header">
-            <span>今日掛號</span>
-            <div class="summary-icon">01</div>
-          </div>
+    <div class="summary-card-header">
+      <span>今日掛號</span>
+      <div class="summary-icon">01</div>
+    </div>
 
-          <strong class="summary-number">28</strong>
-          <p>位病人</p>
+    <strong class="summary-number">28</strong>
 
-        </article>
+    <p>位病人</p>
 
-
-        <article class="summary-card">
-
-          <div class="summary-card-header">
-            <span>已連結心域</span>
-            <div class="summary-icon">02</div>
-          </div>
-
-          <strong class="summary-number">18</strong>
-          <p>64% 已有居家紀錄</p>
-
-        </article>
+  </article>
 
 
-        <article class="summary-card alert-card">
+  <!-- 已連結心域 -->
+  <article
+    class="summary-card clickable-summary"
+    data-summary-filter="linked"
+    role="button"
+    tabindex="0"
+  >
 
-          <div class="summary-card-header">
-            <span>需要關注</span>
-            <div class="summary-icon">03</div>
-          </div>
+    <div class="summary-card-header">
+      <span>已連結心域</span>
+      <div class="summary-icon">02</div>
+    </div>
 
-          <strong class="summary-number">4</strong>
-          <p>近期狀態有明顯變化</p>
+    <strong class="summary-number">18</strong>
 
-        </article>
+    <p>64% 已有居家紀錄</p>
+
+  </article>
 
 
-        <article class="summary-card">
+  <!-- 需要關注 -->
+  <article
+    class="summary-card alert-card clickable-summary"
+    data-summary-filter="attention"
+    role="button"
+    tabindex="0"
+  >
 
-          <div class="summary-card-header">
-            <span>尚未查看</span>
-            <div class="summary-icon">04</div>
-          </div>
+    <div class="summary-card-header">
+      <span>需要關注</span>
+      <div class="summary-icon">03</div>
+    </div>
 
-          <strong class="summary-number">11</strong>
-          <p>位個案近況待確認</p>
+    <strong class="summary-number">4</strong>
 
-        </article>
+    <p>近期狀態有明顯變化</p>
 
-      </section>
+  </article>
+
+
+  <!-- 尚未查看 -->
+  <article
+    class="summary-card clickable-summary"
+    data-summary-filter="unread"
+    role="button"
+    tabindex="0"
+  >
+
+    <div class="summary-card-header">
+      <span>尚未查看</span>
+      <div class="summary-icon">04</div>
+    </div>
+
+    <strong class="summary-number">11</strong>
+
+    <p>位個案近況待確認</p>
+
+  </article>
+
+</section>
 
 
 
       <!-- Patient list -->
-      <section class="patients-section">
+<section class="patients-section">
 
-        <div class="section-header">
+  <div class="section-header">
 
-          <div>
-            <h2>今日個案</h2>
-            <p>
-              優先呈現本診次掛號且已連結心域的個案。
-            </p>
-          </div>
+    <div>
+      <h2>今日個案</h2>
+      <p>
+        優先呈現本診次掛號且已連結心域的個案。
+      </p>
+    </div>
 
-          <div class="filter-tabs">
+    <div class="filter-tabs">
 
-            <button class="filter-tab active">
-              全部 28
-            </button>
+      <button
+        class="filter-tab active"
+        data-filter="all"
+      >
+        全部 <span id="filterAllCount">0</span>
+      </button>
 
-            <button class="filter-tab">
-              已連結 18
-            </button>
+      <button
+        class="filter-tab"
+        data-filter="linked"
+      >
+        已連結 <span id="filterLinkedCount">0</span>
+      </button>
 
-            <button class="filter-tab">
-              需關注 4
-            </button>
+      <button
+        class="filter-tab"
+        data-filter="attention"
+      >
+        需關注 <span id="filterAttentionCount">0</span>
+      </button>
 
-          </div>
+    </div>
 
-        </div>
+  </div>
 
 
 
         <div class="patient-table">
 
-          <div class="table-header">
-
+        <div class="table-header">
             <div>個案</div>
             <div>目前狀態</div>
             <div>近 7 日情緒</div>
@@ -214,282 +263,12 @@
             <div>近期變化</div>
             <div>最後更新</div>
             <div></div>
-
-          </div>
-
-
-          <!-- Patient 1 -->
-          <article class="patient-row highlight">
-
-            <div class="patient-info">
-
-              <div class="patient-avatar">
-                林
-              </div>
-
-              <div>
-                <div class="patient-name">
-                  林○庭
-
-                  <span class="status-tag danger">
-                    需關注
-                  </span>
-                </div>
-
-                <span class="patient-meta">
-                  15:20・複診
-                </span>
-              </div>
-
-            </div>
-
-
-            <div>
-              <span class="mood-status low">
-                狀態下降
-              </span>
-            </div>
-
-
-            <div class="metric-block">
-              <strong>2.1 / 5</strong>
-              <span>↓ 0.8</span>
-            </div>
-
-
-            <div class="metric-block">
-              <strong>4.8 hr</strong>
-              <span>連續 3 日偏低</span>
-            </div>
-
-
-            <div class="change-list">
-
-              <span class="change-item danger">
-                睡眠下降
-              </span>
-
-              <span class="change-item">
-                新增用藥
-              </span>
-
-            </div>
-
-
-            <div class="updated-time">
-              2 小時前
-            </div>
-
-
-            <div class="row-action">
-              <a href="#" class="view-button">
-                查看近況 →
-              </a>
-            </div>
-
-          </article>
-
-
-
-          <!-- Patient 2 -->
-          <article class="patient-row">
-
-            <div class="patient-info">
-
-              <div class="patient-avatar">
-                王
-              </div>
-
-              <div>
-                <div class="patient-name">
-                  王○安
-                </div>
-
-                <span class="patient-meta">
-                  15:40・複診
-                </span>
-              </div>
-
-            </div>
-
-
-            <div>
-              <span class="mood-status stable">
-                大致穩定
-              </span>
-            </div>
-
-
-            <div class="metric-block">
-              <strong>3.6 / 5</strong>
-              <span>與上週相近</span>
-            </div>
-
-
-            <div class="metric-block">
-              <strong>6.7 hr</strong>
-              <span>睡眠穩定</span>
-            </div>
-
-
-            <div class="change-list">
-
-              <span class="change-item">
-                無明顯變化
-              </span>
-
-            </div>
-
-
-            <div class="updated-time">
-              今天 09:12
-            </div>
-
-
-            <div class="row-action">
-              <a href="#" class="view-button">
-                查看近況 →
-              </a>
-            </div>
-
-          </article>
-
-
-
-          <!-- Patient 3 -->
-          <article class="patient-row">
-
-            <div class="patient-info">
-
-              <div class="patient-avatar">
-                張
-              </div>
-
-              <div>
-                <div class="patient-name">
-                  張○宇
-
-                  <span class="status-tag new">
-                    新連結
-                  </span>
-                </div>
-
-                <span class="patient-meta">
-                  16:00・初診
-                </span>
-              </div>
-
-            </div>
-
-
-            <div>
-              <span class="mood-status medium">
-                波動增加
-              </span>
-            </div>
-
-
-            <div class="metric-block">
-              <strong>3.0 / 5</strong>
-              <span>波動較大</span>
-            </div>
-
-
-            <div class="metric-block">
-              <strong>5.9 hr</strong>
-              <span>入睡時間延後</span>
-            </div>
-
-
-            <div class="change-list">
-
-              <span class="change-item warning">
-                情緒波動
-              </span>
-
-              <span class="change-item">
-                壓力事件
-              </span>
-
-            </div>
-
-
-            <div class="updated-time">
-              昨天 23:48
-            </div>
-
-
-            <div class="row-action">
-              <a href="#" class="view-button">
-                查看近況 →
-              </a>
-            </div>
-
-          </article>
-
-
-
-          <!-- Patient 4 -->
-          <article class="patient-row">
-
-            <div class="patient-info">
-
-              <div class="patient-avatar muted-avatar">
-                李
-              </div>
-
-              <div>
-                <div class="patient-name">
-                  李○翔
-                </div>
-
-                <span class="patient-meta">
-                  16:20・複診
-                </span>
-              </div>
-
-            </div>
-
-
-            <div>
-              <span class="not-linked">
-                尚未連結
-              </span>
-            </div>
-
-
-            <div class="empty-value">
-              —
-            </div>
-
-
-            <div class="empty-value">
-              —
-            </div>
-
-
-            <div class="empty-value">
-              無心域資料
-            </div>
-
-
-            <div class="empty-value">
-              —
-            </div>
-
-
-            <div class="row-action">
-              <a href="#" class="connect-button">
-                邀請連結
-              </a>
-            </div>
-
-          </article>
-
         </div>
 
-      </section>
+        <div id="patientList"></div>
 
+        </div>
+        </section>
 
       <!-- Footer notice -->
       <div class="data-notice">
@@ -511,6 +290,283 @@
     </main>
 
   </div>
+  <!-- =========================
+     Patient Drawer
+========================= -->
 
+<div class="drawer-overlay" id="drawerOverlay"></div>
+
+<aside class="patient-drawer" id="patientDrawer">
+
+  <div class="drawer-header">
+
+    <div>
+      <span class="drawer-label">個案近況</span>
+      <h2 id="drawerPatientName">林○庭</h2>
+      <p id="drawerPatientMeta">
+        下午診・13:42 掛號・複診
+      </p>
+    </div>
+
+    <button class="icon-button" id="closeDrawer">
+      ×
+    </button>
+
+  </div>
+
+
+  <div class="drawer-body">
+
+    <section class="drawer-section">
+
+      <h3>目前狀態</h3>
+
+      <div class="drawer-status-card">
+        <span id="drawerStatus">狀態下降</span>
+      </div>
+
+    </section>
+
+
+    <section class="drawer-section">
+
+      <h3>近 7 日摘要</h3>
+
+      <div class="drawer-grid">
+
+        <div class="drawer-metric">
+          <span>情緒</span>
+          <strong id="drawerMood">2.1 / 5</strong>
+          <small id="drawerMoodSub">↓ 0.8</small>
+        </div>
+
+        <div class="drawer-metric">
+          <span>睡眠</span>
+          <strong id="drawerSleep">4.8 hr</strong>
+          <small id="drawerSleepSub">
+            連續 3 日偏低
+          </small>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <section class="drawer-section">
+
+      <h3>近期變化</h3>
+
+      <div
+        class="drawer-tags"
+        id="drawerChanges"
+      >
+      </div>
+
+    </section>
+
+
+    <section class="drawer-section">
+
+      <h3>AI 重點整理</h3>
+
+      <p class="drawer-summary">
+        近期睡眠時間下降，情緒平均值較前期降低，
+        並有新增用藥紀錄。建議門診時優先確認睡眠、
+        用藥後變化及近期壓力事件。
+      </p>
+
+    </section>
+
+  </div>
+
+
+  <div class="drawer-footer">
+
+    <button class="secondary-action" id="closeDrawerBottom">
+      返回
+    </button>
+
+    <button class="primary-action">
+      查看完整個案
+    </button>
+
+  </div>
+
+</aside>
+
+
+
+<!-- =========================
+     Add Patient Modal
+========================= -->
+
+<div class="modal-overlay" id="addPatientModal">
+
+  <div class="modal-card">
+
+    <div class="modal-header">
+
+      <div>
+        <h2>新增個案</h2>
+        <p>建立醫療端個案資料</p>
+      </div>
+
+      <button
+        class="icon-button"
+        id="closeAddPatientModal"
+      >
+        ×
+      </button>
+
+    </div>
+
+
+    <form id="addPatientForm">
+
+      <div class="form-group">
+        <label>個案姓名</label>
+        <input
+            type="text"
+            id="newPatientName"
+            placeholder="請輸入完整姓名，例如：陳小明"
+            required
+            >
+      </div>
+
+
+      <div class="form-group">
+        <label>掛號號碼</label>
+        <input
+          type="number"
+          id="newQueueNumber"
+          placeholder="例如：42"
+          required
+        >
+      </div>
+
+
+      <div class="form-group">
+        <label>看診類型</label>
+
+        <select id="newVisitType">
+          <option value="複診">複診</option>
+          <option value="初診">初診</option>
+          <option value="預約門診">
+            預約門診
+          </option>
+        </select>
+
+      </div>
+
+
+      <div class="modal-actions">
+
+        <button
+          type="button"
+          class="secondary-action"
+          id="cancelAddPatient"
+        >
+          取消
+        </button>
+
+        <button
+          type="submit"
+          class="primary-action"
+        >
+          新增個案
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+</div>
+
+
+
+<!-- =========================
+     Invite Modal
+========================= -->
+
+<div class="modal-overlay" id="inviteModal">
+
+  <div class="modal-card">
+
+    <div class="modal-header">
+
+      <div>
+        <h2>邀請連結心域</h2>
+
+        <p id="invitePatientName">
+          李○翔
+        </p>
+      </div>
+
+      <button
+        class="icon-button"
+        id="closeInviteModal"
+      >
+        ×
+      </button>
+
+    </div>
+
+
+    <div class="invite-content">
+
+      <p>
+        可產生一組一次性連結代碼，
+        讓患者在心域 App 完成院所連結。
+      </p>
+
+      <div class="invite-code-box">
+
+        <span>連結代碼</span>
+
+        <strong id="inviteCode">
+          --
+        </strong>
+
+      </div>
+
+    </div>
+
+
+    <div class="modal-actions">
+
+      <button
+        type="button"
+        class="secondary-action"
+        id="cancelInvite"
+      >
+        取消
+      </button>
+
+      <button
+        type="button"
+        class="primary-action"
+        id="generateInviteCode"
+      >
+        產生代碼
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
+<!-- Toast -->
+
+<div class="toast" id="toast">
+  操作完成
+</div>
+<script src="data.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
