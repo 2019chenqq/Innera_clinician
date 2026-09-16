@@ -86,7 +86,6 @@ a {
 ============================== */
 
 .app-shell {
-  min-height: 100vh;
   display: flex;
 }
 
