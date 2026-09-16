@@ -20,6 +20,77 @@
 
 <body>
 
+  <!-- =========================
+       Login View
+  ========================== -->
+  <main id="loginView" class="login-page">
+    <section class="login-panel">
+      <div class="login-brand">
+        <div class="brand-mark">I</div>
+        <div>
+          <p class="eyebrow">INNERA CLINICAL</p>
+          <h1>心域醫療端</h1>
+        </div>
+      </div>
+
+      <div class="login-copy">
+        <span class="demo-badge">MVP DEMO</span>
+        <h2>從今日門診，快速掌握個案近期變化。</h2>
+        <p>
+          此版本為前端流程原型，目前使用模擬個案資料，
+          用來測試登入、門診列表、近況摘要與完整個案資料瀏覽流程。
+        </p>
+      </div>
+
+      <form id="loginForm" class="login-form">
+        <label>
+          <span>醫師帳號</span>
+          <input id="loginEmail" type="email" value="doctor@innera.demo" required>
+        </label>
+
+        <label>
+          <span>密碼</span>
+          <input id="loginPassword" type="password" value="123456" required>
+        </label>
+
+        <button type="submit" class="login-button">登入醫療端</button>
+        <small>Demo 帳號已預填，直接登入即可。</small>
+      </form>
+    </section>
+
+    <aside class="login-visual">
+      <div class="login-visual-card">
+        <p class="eyebrow">TODAY'S CLINIC</p>
+        <h3>不是把所有紀錄搬給醫師，而是先整理出門診真正需要看的重點。</h3>
+
+        <div class="login-feature">
+          <i class="bi bi-calendar2-check"></i>
+          <div>
+            <strong>今日掛號優先</strong>
+            <p>先看本診次需要處理的個案。</p>
+          </div>
+        </div>
+
+        <div class="login-feature">
+          <i class="bi bi-activity"></i>
+          <div>
+            <strong>近況快速摘要</strong>
+            <p>情緒、睡眠、近期變化集中呈現。</p>
+          </div>
+        </div>
+
+        <div class="login-feature">
+          <i class="bi bi-journal-medical"></i>
+          <div>
+            <strong>完整資料可追溯</strong>
+            <p>需要時再展開趨勢、事件、用藥與每日紀錄。</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <div id="appView" class="app-view hidden">
   <div class="app-shell">
 
     <!-- Sidebar -->
@@ -88,13 +159,18 @@
           </div>
         </div>
 
+        <button type="button" class="logout-button" id="logoutButton">
+          <i class="bi bi-box-arrow-right"></i>
+          登出
+        </button>
+
       </div>
 
     </aside>
 
 
     <!-- Main -->
-    <main class="main-content">
+    <main class="main-content" id="dashboardMain">
 
       <!-- Header -->
       <header class="topbar">
@@ -381,7 +457,7 @@
       返回
     </button>
 
-    <button class="primary-action">
+    <button class="primary-action" id="openFullPatient">
       查看完整個案
     </button>
 
@@ -389,6 +465,152 @@
 
 </aside>
 
+
+
+
+
+<!-- =========================
+     Full Patient Detail
+========================= -->
+<section class="patient-detail-page hidden" id="patientDetailPage">
+
+  <header class="detail-topbar">
+    <button class="detail-back-button" id="backToDashboard" type="button">
+      <i class="bi bi-arrow-left"></i>
+      回到今日門診
+    </button>
+
+    <button class="secondary-action" id="printPatientSummary" type="button">
+      <i class="bi bi-printer"></i>
+      列印摘要
+    </button>
+  </header>
+
+  <section class="detail-patient-header">
+    <div class="detail-patient-main">
+      <div class="detail-avatar" id="detailAvatar">林</div>
+
+      <div>
+        <div class="detail-name-row">
+          <h1 id="detailPatientName">林○庭</h1>
+          <span class="detail-queue" id="detailQueue">18號</span>
+        </div>
+
+        <p id="detailPatientMeta">下午診・13:42 掛號・複診</p>
+        <div class="detail-tags" id="detailHeaderTags"></div>
+      </div>
+    </div>
+
+    <button class="mark-viewed-button" id="markViewedButton" type="button">
+      標記已查看
+    </button>
+  </section>
+
+  <div class="detail-grid">
+
+    <div class="detail-main-column">
+
+      <section class="detail-card detail-summary-card">
+        <div class="detail-card-heading">
+          <div>
+            <p class="eyebrow">AI SUMMARY · 7 DAYS</p>
+            <h2>近 7 日重點摘要</h2>
+          </div>
+          <span class="detail-level" id="detailSummaryLevel">需要留意</span>
+        </div>
+
+        <p class="detail-summary-text" id="detailSummaryText"></p>
+
+        <div class="detail-change-grid" id="detailChangeGrid"></div>
+      </section>
+
+      <section class="detail-card">
+        <div class="detail-card-heading">
+          <div>
+            <p class="eyebrow">TREND</p>
+            <h2>近 7 日趨勢</h2>
+          </div>
+        </div>
+
+        <div class="detail-chart-legend">
+          <span><i class="legend-dot mood"></i>情緒</span>
+          <span><i class="legend-dot sleep"></i>睡眠</span>
+          <span><i class="legend-dot energy"></i>能量</span>
+        </div>
+
+        <div class="detail-trend-chart" id="detailTrendChart"></div>
+      </section>
+
+      <section class="detail-card">
+        <div class="detail-card-heading">
+          <div>
+            <p class="eyebrow">TIMELINE</p>
+            <h2>近期重要事件</h2>
+          </div>
+        </div>
+
+        <div class="detail-timeline" id="detailEventTimeline"></div>
+      </section>
+
+      <section class="detail-card">
+        <div class="detail-card-heading">
+          <div>
+            <p class="eyebrow">RECORDS</p>
+            <h2>完整紀錄</h2>
+          </div>
+        </div>
+
+        <div class="record-tabs">
+          <button class="record-tab active" data-record-tab="daily" type="button">每日紀錄</button>
+          <button class="record-tab" data-record-tab="symptoms" type="button">症狀</button>
+          <button class="record-tab" data-record-tab="sleep" type="button">睡眠</button>
+          <button class="record-tab" data-record-tab="medications" type="button">用藥</button>
+        </div>
+
+        <div id="detailRecordContent"></div>
+      </section>
+
+    </div>
+
+    <aside class="detail-side-column">
+
+      <section class="detail-card compact">
+        <p class="eyebrow">LAST 7 DAYS</p>
+        <h3>快速指標</h3>
+
+        <div class="quick-stat-list">
+          <div><span>平均情緒</span><strong id="detailAvgMood">—</strong></div>
+          <div><span>平均睡眠</span><strong id="detailAvgSleep">—</strong></div>
+          <div><span>平均能量</span><strong id="detailAvgEnergy">—</strong></div>
+          <div><span>紀錄天數</span><strong id="detailRecordDays">—</strong></div>
+        </div>
+      </section>
+
+      <section class="detail-card compact">
+        <p class="eyebrow">MEDICATION</p>
+        <h3>目前用藥</h3>
+        <div class="detail-medication-list" id="detailMedicationList"></div>
+      </section>
+
+      <section class="detail-card compact">
+        <p class="eyebrow">LAST VISIT</p>
+        <h3>上次回診摘要</h3>
+        <p class="last-visit-copy" id="detailLastVisit"></p>
+      </section>
+
+    </aside>
+
+  </div>
+
+  <div class="data-notice detail-notice">
+    <div class="data-notice-icon">i</div>
+    <div>
+      <strong>目前為 Demo 模擬資料</strong>
+      <p>完整個案頁用來驗證醫師資訊瀏覽流程；之後可將同一介面改接心域 App / Firebase 真實資料。</p>
+    </div>
+  </div>
+
+</section>
 
 
 <!-- =========================
@@ -560,7 +782,16 @@
 <div class="toast" id="toast">
   操作完成
 </div>
-<script src="data.js"></script>
-<script src="script.js"></script>
+  </div>
+<script defer src="data/patients.js"></script>
+<script defer src="data/patient-details.js"></script>
+<script defer src="js/state.js"></script>
+<script defer src="js/ui.js"></script>
+<script defer src="js/dashboard.js"></script>
+<script defer src="js/drawer.js"></script>
+<script defer src="js/modals.js"></script>
+<script defer src="js/patient-detail.js"></script>
+<script defer src="js/auth.js"></script>
+<script defer src="js/app.js"></script>
 </body>
 </html>
