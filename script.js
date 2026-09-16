@@ -9,7 +9,11 @@ function renderPatients() {
   patientList.innerHTML = "";
 
 
-  patients.forEach((patient) => {
+  const sortedPatients = [...patients].sort(
+  (a, b) => a.queueNumber - b.queueNumber
+);
+
+sortedPatients.forEach((patient) => {
 
     const row =
       document.createElement(
