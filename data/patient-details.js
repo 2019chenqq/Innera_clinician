@@ -176,3 +176,72 @@ function attachPatientDetails(patients) {
 
   return patients;
 }
+function applyRealSleepDataToPatient(patient, sleepData) {
+  if (!patient || !sleepData) return;
+
+  const { records, summary } = sleepData;
+
+  // 今日門診列表
+  patient.sleep =
+    summary.avgDurationHours == null
+      ? "—"
+      : `${summary.avgDurationHours} hr`;
+
+  patient.sleepSub =
+    records.length > 0
+      ? `近 ${records.length} 筆平均`
+      : "暫無睡眠資料";
+
+  // 完整個案頁快速指標
+  if (patient.quick) {
+    patient.quick.sleep =
+      summary.avgDurationHours == null
+        ? "—"
+        : `${summary.avgDurationHours} hr`;
+  }
+
+  // 趨勢資料
+  if (patient.trend) {
+  // 真實睡眠資料另外存，不覆蓋原本情緒 / 能量的日期
+  patient.trend.sleepDates = records.map((record) => {
+    const parts = record.dateId.split("-");
+    return `${Number(parts[1])}/${Number(parts[2])}`;
+  });
+
+  patient.trend.sleepHours = records.map((record) => {
+    if (typeof record.durationMinutes !== "number") return null;
+
+    return Math.round(
+      (record.durationMinutes / 60) * 10
+    ) / 10;
+  });
+}
+
+  // 睡眠明細表
+  if (patient.records) {
+    patient.records.sleep = records
+      .slice()
+      .reverse()
+      .map((record) => {
+        const duration =
+          typeof record.durationMinutes === "number"
+            ? `${Math.floor(record.durationMinutes / 60)}h ${
+                record.durationMinutes % 60
+              }m`
+            : "—";
+
+        const quality =
+          typeof record.quality === "number"
+            ? `${record.quality} / 5`
+            : "—";
+
+        return [
+          record.dateId.slice(5).replace("-", "/"),
+          record.sleepStart || "—",
+          record.wakeTime || "—",
+          duration,
+          quality
+        ];
+      });
+  }
+}

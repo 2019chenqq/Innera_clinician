@@ -1,58 +1,481 @@
+// js/auth.js
 
+(function () {
+  let currentStaff = null;
 
+  function getFirebase() {
+    if (!window.InneraFirebase) {
+      throw new Error("InneraFirebase 尚未載入");
+    }
 
-function showLoginView() {
-  document.getElementById("loginView")?.classList.remove("hidden");
-  document.getElementById("appView")?.classList.add("hidden");
-}
+    window.InneraFirebase.init();
 
-function showAppView() {
-  document.getElementById("loginView")?.classList.add("hidden");
-  document.getElementById("appView")?.classList.remove("hidden");
-  showDashboard();
-}
-
-function initAuth() {
-  const loggedIn =
-    localStorage.getItem("inneraClinicianDemoLoggedIn") === "true";
-
-  if (loggedIn) {
-    showAppView();
-  } else {
-    showLoginView();
+    return {
+      auth: firebase.auth(),
+      db: firebase.firestore()
+    };
   }
 
-  document.getElementById("loginForm")
-    ?.addEventListener("submit", (event) => {
-      event.preventDefault();
 
-      const email =
-        document.getElementById("loginEmail").value.trim();
+  function showLoginView() {
+    const loginView =
+      document.getElementById("loginView");
 
-      const password =
-        document.getElementById("loginPassword").value.trim();
+    const appView =
+      document.getElementById("appView");
 
-      if (!email || !password) {
-        showToast("請輸入帳號與密碼");
-        return;
-      }
+    if (loginView) {
+      loginView.classList.remove("hidden");
+    }
 
-      localStorage.setItem(
-        "inneraClinicianDemoLoggedIn",
-        "true"
+    if (appView) {
+      appView.classList.add("hidden");
+    }
+  }
+
+
+  function showAppView() {
+    const loginView =
+      document.getElementById("loginView");
+
+    const appView =
+      document.getElementById("appView");
+
+    if (loginView) {
+      loginView.classList.add("hidden");
+    }
+
+    if (appView) {
+      appView.classList.remove("hidden");
+    }
+
+    if (typeof showDashboard === "function") {
+      showDashboard();
+    }
+  }
+
+
+  function setLoginError(message = "") {
+    const element =
+      document.getElementById("loginError");
+
+    if (element) {
+      element.textContent = message;
+    }
+  }
+
+
+  function setLoginLoading(loading) {
+    const button =
+      document.getElementById("loginButton");
+
+    if (!button) return;
+
+    button.disabled = loading;
+
+    button.textContent =
+      loading
+        ? "登入中..."
+        : "登入醫療端";
+  }
+
+
+  async function loadStaffProfile(user) {
+    const { db } = getFirebase();
+
+console.log("[Innera] 登入 UID =", user.uid);
+  console.log("[Innera] 登入 Email =", user.email);
+
+    const snapshot =
+      await db
+        .collection("clinicStaff")
+        .doc(user.uid)
+        .get();
+
+    if (!snapshot.exists) {
+      throw new Error(
+        "此帳號尚未建立院所人員資料"
       );
+    }
+
+    const profile = snapshot.data();
+
+    if (profile.active === false) {
+      throw new Error(
+        "此院所帳號已停用"
+      );
+    }
+
+    if (!profile.clinicId) {
+      throw new Error(
+        "此帳號尚未設定所屬院所"
+      );
+    }
+
+    return {
+      uid: user.uid,
+      email: user.email,
+      ...profile
+    };
+  }
+
+
+  function renderStaffProfile(staff) {
+    const clinicName =
+      document.getElementById(
+        "currentClinicName"
+      );
+
+    const staffName =
+      document.getElementById(
+        "currentStaffName"
+      );
+
+    const staffRole =
+      document.getElementById(
+        "currentStaffRole"
+      );
+
+    const staffAvatar =
+      document.getElementById(
+        "currentStaffAvatar"
+      );
+
+
+    if (clinicName) {
+      clinicName.textContent =
+        staff.clinicName ||
+        staff.clinicId ||
+        "院所";
+    }
+
+
+    if (staffName) {
+      staffName.textContent =
+        staff.displayName ||
+        staff.email ||
+        "院所人員";
+    }
+
+
+    if (staffRole) {
+      const roleLabels = {
+        admin: "院所管理員",
+        doctor: staff.department || "醫師",
+        nurse: "護理人員",
+        staff: "行政人員"
+      };
+
+      staffRole.textContent =
+        roleLabels[staff.role] ||
+        staff.department ||
+        "院所人員";
+    }
+
+
+    if (staffAvatar) {
+      const name =
+        staff.displayName ||
+        staff.email ||
+        "?";
+
+      staffAvatar.textContent =
+        name.charAt(0);
+    }
+  }
+
+
+  async function handleLoggedInUser(user) {
+    try {
+      const staff =
+        await loadStaffProfile(user);
+
+      currentStaff = staff;
+
+
+      // 提供給整個醫療端使用
+      window.INNERA_CURRENT_STAFF =
+        staff;
+
+      window.INNERA_ACTIVE_CLINIC_ID =
+        staff.clinicId;
+
+
+      renderStaffProfile(staff);
 
       showAppView();
-      showToast("登入成功");
-    });
 
-  document.getElementById("logoutButton")
-    ?.addEventListener("click", () => {
-      localStorage.removeItem(
-        "inneraClinicianDemoLoggedIn"
+
+      console.info(
+        "[Innera] 院所人員登入",
+        {
+          uid: staff.uid,
+          clinicId: staff.clinicId,
+          role: staff.role
+        }
       );
 
-      closeDrawer();
+    } catch (error) {
+
+      console.error(
+        "[Innera] 院所帳號驗證失敗",
+        error
+      );
+
+      const { auth } = getFirebase();
+
+      await auth.signOut();
+
+      currentStaff = null;
+
+      window.INNERA_CURRENT_STAFF = null;
+      window.INNERA_ACTIVE_CLINIC_ID = null;
+
       showLoginView();
-    });
-}
+
+      setLoginError(
+        error.message ||
+        "無法驗證院所帳號"
+      );
+    }
+  }
+
+
+  async function login(email, password) {
+    const { auth } = getFirebase();
+
+    setLoginLoading(true);
+    setLoginError("");
+
+    try {
+
+      await auth.signInWithEmailAndPassword(
+        email,
+        password
+      );
+
+      // 不需要 showAppView
+      // onAuthStateChanged 會接手
+
+    } catch (error) {
+
+      console.error(
+        "[Innera] 登入失敗",
+        error
+      );
+
+
+      let message =
+        "登入失敗，請確認帳號與密碼";
+
+
+      switch (error.code) {
+
+        case "auth/invalid-email":
+          message =
+            "帳號格式不正確";
+          break;
+
+        case "auth/invalid-credential":
+        case "auth/wrong-password":
+        case "auth/user-not-found":
+          message =
+            "帳號或密碼錯誤";
+          break;
+
+        case "auth/too-many-requests":
+          message =
+            "登入失敗次數過多，請稍後再試";
+          break;
+
+        case "auth/user-disabled":
+          message =
+            "此帳號已被停用";
+          break;
+      }
+
+
+      setLoginError(message);
+
+    } finally {
+
+      setLoginLoading(false);
+
+    }
+  }
+
+
+  async function logout() {
+    const { auth } = getFirebase();
+
+    await auth.signOut();
+  }
+
+
+  function initLoginForm() {
+
+    const loginForm =
+      document.getElementById(
+        "loginForm"
+      );
+
+
+    if (loginForm) {
+
+      loginForm.addEventListener(
+        "submit",
+        async (event) => {
+
+          event.preventDefault();
+
+
+          const email =
+            document
+              .getElementById(
+                "loginEmail"
+              )
+              .value
+              .trim();
+
+
+          const password =
+            document
+              .getElementById(
+                "loginPassword"
+              )
+              .value;
+
+
+          if (!email || !password) {
+
+            setLoginError(
+              "請輸入帳號與密碼"
+            );
+
+            return;
+          }
+
+
+          await login(
+            email,
+            password
+          );
+
+        }
+      );
+    }
+
+
+    const logoutButton =
+      document.getElementById(
+        "logoutButton"
+      );
+
+
+    if (logoutButton) {
+
+      logoutButton.addEventListener(
+        "click",
+        async () => {
+
+          try {
+
+            await logout();
+
+          } catch (error) {
+
+            console.error(
+              "[Innera] 登出失敗",
+              error
+            );
+
+          }
+
+        }
+      );
+    }
+  }
+
+
+  function initAuthState() {
+
+    const { auth } =
+      getFirebase();
+
+
+    auth.onAuthStateChanged(
+      async (user) => {
+
+        if (!user) {
+
+          currentStaff = null;
+
+          window.INNERA_CURRENT_STAFF =
+            null;
+
+          window.INNERA_ACTIVE_CLINIC_ID =
+            null;
+
+          showLoginView();
+
+          return;
+        }
+
+
+        await handleLoggedInUser(
+          user
+        );
+
+      }
+    );
+  }
+
+
+  function init() {
+
+    try {
+
+      getFirebase();
+
+      initLoginForm();
+
+      initAuthState();
+
+    } catch (error) {
+
+      console.error(
+        "[Innera] Auth 初始化失敗",
+        error
+      );
+
+      showLoginView();
+
+      setLoginError(
+        "登入系統初始化失敗"
+      );
+
+    }
+  }
+
+
+  window.InneraClinicalAuth = {
+
+    init,
+
+    login,
+
+    logout,
+
+    get currentStaff() {
+      return currentStaff;
+    }
+
+  };
+
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    init
+  );
+
+})();

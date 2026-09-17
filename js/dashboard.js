@@ -6,9 +6,16 @@ function renderPatients() {
 
   patientList.innerHTML = "";
 
-  const sortedPatients = [...patients].sort(
-    (a, b) => a.queueNumber - b.queueNumber
-  );
+  const sortedPatients = [...patients].sort((a, b) => {
+    const queueA = Number.isFinite(Number(a.queueNumber))
+      ? Number(a.queueNumber)
+      : Number.MAX_SAFE_INTEGER;
+    const queueB = Number.isFinite(Number(b.queueNumber))
+      ? Number(b.queueNumber)
+      : Number.MAX_SAFE_INTEGER;
+
+    return queueA - queueB;
+  });
 
   sortedPatients.forEach((patient) => {
     const row = document.createElement("article");

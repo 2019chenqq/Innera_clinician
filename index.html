@@ -43,19 +43,38 @@
       </div>
 
       <form id="loginForm" class="login-form">
-        <label>
-          <span>醫師帳號</span>
-          <input id="loginEmail" type="email" value="doctor@innera.demo" required>
-        </label>
 
-        <label>
-          <span>密碼</span>
-          <input id="loginPassword" type="password" value="123456" required>
-        </label>
+  <label>
+    <span>院所帳號</span>
+    <input
+      id="loginEmail"
+      type="email"
+      autocomplete="username"
+      required
+    >
+  </label>
 
-        <button type="submit" class="login-button">登入醫療端</button>
-        <small>Demo 帳號已預填，直接登入即可。</small>
-      </form>
+  <label>
+    <span>密碼</span>
+    <input
+      id="loginPassword"
+      type="password"
+      autocomplete="current-password"
+      required
+    >
+  </label>
+
+  <button
+    type="submit"
+    class="login-button"
+    id="loginButton"
+  >
+    登入醫療端
+  </button>
+
+  <small id="loginError"></small>
+
+</form>
     </section>
 
     <aside class="login-visual">
@@ -135,10 +154,14 @@
     <span>需關注</span>
   </a>
 
-  <a href="#" class="nav-item">
-    <i class="bi bi-hospital nav-icon"></i>
-    <span>院所管理</span>
-  </a>
+  <a
+  href="#"
+  class="nav-item"
+  id="clinicManagementNav"
+>
+  <i class="bi bi-hospital nav-icon"></i>
+  <span>院所管理</span>
+</a>
 
 </nav>
 
@@ -146,23 +169,27 @@
       <div class="sidebar-bottom">
 
         <div class="clinic-info">
-          <span class="clinic-label">目前院所</span>
-          <strong>心域身心診所</strong>
-        </div>
+  <span class="clinic-label">目前院所</span>
+  <strong id="currentClinicName">讀取中...</strong>
+</div>
 
-        <div class="doctor-profile">
-          <div class="doctor-avatar">吳</div>
+<div class="doctor-profile">
+  <div class="doctor-avatar" id="currentStaffAvatar">—</div>
 
-          <div>
-            <strong>吳醫師</strong>
-            <span>精神科</span>
-          </div>
-        </div>
+  <div>
+    <strong id="currentStaffName">讀取中...</strong>
+    <span id="currentStaffRole">—</span>
+  </div>
+</div>
 
-        <button type="button" class="logout-button" id="logoutButton">
-          <i class="bi bi-box-arrow-right"></i>
-          登出
-        </button>
+<button
+  type="button"
+  class="logout-button"
+  id="logoutButton"
+>
+  <i class="bi bi-box-arrow-right"></i>
+  登出
+</button>
 
       </div>
 
@@ -612,6 +639,203 @@
 
 </section>
 
+<!-- =========================
+     Clinic Management
+========================= -->
+
+<section
+  id="clinicManagementPage"
+  class="clinic-management-page hidden"
+>
+
+  <div class="clinic-management-header">
+
+    <div>
+      <p class="eyebrow">CLINIC MANAGEMENT</p>
+      <h1>院所管理</h1>
+      <p id="clinicManagementSubtitle">
+        讀取院所資料中...
+      </p>
+    </div>
+
+  </div>
+
+
+  <div class="clinic-overview-card">
+
+    <div>
+      <span class="clinic-overview-label">
+        目前院所
+      </span>
+
+      <strong id="managementClinicName">
+        —
+      </strong>
+    </div>
+
+    <div>
+      <span class="clinic-overview-label">
+        成員人數
+      </span>
+
+      <strong id="managementStaffCount">
+        0
+      </strong>
+    </div>
+
+  </div>
+
+
+  <section class="clinic-staff-section">
+
+    <section class="clinic-staff-section">
+
+  <div class="section-header">
+    <div>
+      <h2>院所成員</h2>
+      <p>
+        顯示目前具有此院所帳號的醫療與行政人員。
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="secondary-button"
+      id="addClinicStaffButton"
+    >
+      ＋ 新增成員
+    </button>
+  </div>
+
+
+    <div
+      id="clinicStaffLoading"
+      class="clinic-staff-loading"
+    >
+      正在讀取院所成員...
+    </div>
+
+
+    <div
+      id="clinicStaffEmpty"
+      class="clinic-staff-empty hidden"
+    >
+      目前尚無院所成員。
+    </div>
+
+
+    <div
+      id="clinicStaffList"
+      class="clinic-staff-list"
+    ></div>
+
+  </section>
+
+</section>
+
+<!-- =========================
+     Add Clinic Staff Modal
+========================= -->
+
+<div
+  class="modal-overlay"
+  id="addClinicStaffModal"
+>
+  <div class="modal-card">
+
+    <div class="modal-header">
+      <div>
+        <h2>新增院所成員</h2>
+        <p>建立新的院所登入帳號</p>
+      </div>
+
+      <button
+        type="button"
+        class="icon-button"
+        id="closeAddClinicStaffModal"
+      >
+        ×
+      </button>
+    </div>
+
+    <form id="addClinicStaffForm">
+
+      <div class="form-group">
+        <label>姓名</label>
+        <input
+          type="text"
+          id="newStaffName"
+          placeholder="例如：陳醫師"
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label>Email</label>
+        <input
+          type="email"
+          id="newStaffEmail"
+          placeholder="doctor@example.com"
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label>初始密碼</label>
+        <input
+          type="password"
+          id="newStaffPassword"
+          minlength="6"
+          placeholder="至少 6 碼"
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label>角色</label>
+
+        <select id="newStaffRole">
+          <option value="doctor">醫師</option>
+          <option value="nurse">護理人員</option>
+          <option value="staff">行政人員</option>
+          <option value="admin">院所管理員</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>科別</label>
+
+        <input
+          type="text"
+          id="newStaffDepartment"
+          placeholder="例如：精神科"
+        >
+      </div>
+
+      <div class="modal-actions">
+
+        <button
+          type="button"
+          class="secondary-action"
+          id="cancelAddClinicStaff"
+        >
+          取消
+        </button>
+
+        <button
+          type="submit"
+          class="primary-action"
+          id="submitAddClinicStaff"
+        >
+          建立帳號
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+</div>
 
 <!-- =========================
      Add Patient Modal
@@ -783,15 +1007,33 @@
   操作完成
 </div>
   </div>
+<script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-functions-compat.js"></script>
+
+<script defer src="js/patient_link_mvp.js"></script>
+
+<script defer src="js/firebase_config.js"></script>
+<script defer src="js/firebase_service.js"></script>
+
 <script defer src="data/patients.js"></script>
+<script defer src="js/dashboard.js"></script>
+
+<script defer src="data/firebase-patient-sync.js"></script>
+
+<script defer src="js/firebase_sleep_sync.js"></script>
+<script defer src="js/firebase_medication-sync.js"></script>
+
+
 <script defer src="data/patient-details.js"></script>
 <script defer src="js/state.js"></script>
 <script defer src="js/ui.js"></script>
-<script defer src="js/dashboard.js"></script>
 <script defer src="js/drawer.js"></script>
 <script defer src="js/modals.js"></script>
-<script defer src="js/patient-detail.js"></script>
+<script defer src="js/patient_detail.js"></script>
 <script defer src="js/auth.js"></script>
+<script defer src="js/clinic-management.js"></script>
 <script defer src="js/app.js"></script>
 </body>
 </html>
