@@ -1,0 +1,507 @@
+/* ==============================
+   Drawer
+============================== */
+
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+
+  background:
+    rgba(18, 30, 50, 0.25);
+
+  opacity: 0;
+  visibility: hidden;
+
+  transition: 0.2s ease;
+
+  z-index: 50;
+}
+
+.drawer-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+
+.patient-drawer {
+  position: fixed;
+
+  top: 0;
+  right: 0;
+
+  width: 460px;
+  height: 100%;
+
+  background: #ffffff;
+
+  box-shadow:
+    -10px 0 40px
+    rgba(20, 30, 50, 0.12);
+
+  transform: translateX(100%);
+
+  transition: 0.25s ease;
+
+  z-index: 60;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.patient-drawer.show {
+  transform: translateX(0);
+}
+
+
+.drawer-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  padding: 28px;
+
+  border-bottom:
+    1px solid var(--border);
+}
+
+.drawer-label {
+  color: var(--primary);
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.drawer-header h2 {
+  margin: 6px 0 4px;
+
+  font-size: 24px;
+}
+
+.drawer-header p {
+  margin: 0;
+
+  color: var(--text-light);
+
+  font-size: 14px;
+}
+
+
+.icon-button {
+  width: 40px;
+  height: 40px;
+
+  border: 0;
+  border-radius: 10px;
+
+  background: #f3f5f8;
+
+  color: var(--text-secondary);
+
+  cursor: pointer;
+
+  font-size: 24px;
+}
+
+
+.drawer-body {
+  flex: 1;
+
+  overflow-y: auto;
+
+  padding: 26px;
+}
+
+
+.drawer-section {
+  margin-bottom: 30px;
+}
+
+.drawer-section h3 {
+  margin: 0 0 14px;
+
+  font-size: 17px;
+}
+
+
+.drawer-status-card {
+  display: inline-flex;
+
+  padding: 8px 12px;
+
+  border-radius: 8px;
+
+  background: var(--danger-bg);
+
+  color: var(--danger);
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+
+.drawer-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, 1fr);
+
+  gap: 14px;
+}
+
+
+.drawer-metric {
+  padding: 18px;
+
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.drawer-metric span,
+.drawer-metric strong,
+.drawer-metric small {
+  display: block;
+}
+
+.drawer-metric span {
+  color: var(--text-light);
+
+  font-size: 14px;
+}
+
+.drawer-metric strong {
+  margin-top: 5px;
+
+  font-size: 20px;
+}
+
+.drawer-metric small {
+  margin-top: 5px;
+
+  color: var(--text-secondary);
+
+  font-size: 14px;
+}
+
+
+.drawer-tags {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 8px;
+}
+
+.drawer-tag {
+  padding: 7px 10px;
+
+  background: #f0f3f7;
+
+  border-radius: 7px;
+
+  color: var(--text-secondary);
+
+  font-size: 14px;
+}
+
+
+.drawer-summary {
+  margin: 0;
+
+  padding: 18px;
+
+  background: #f6f8fb;
+
+  border-radius: 12px;
+
+  color: var(--text-secondary);
+
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+
+.drawer-footer {
+  display: flex;
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  padding: 20px 26px;
+
+  border-top:
+    1px solid var(--border);
+}
+
+
+
+/* ==============================
+   Modal
+============================== */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+
+  background:
+    rgba(18, 30, 50, 0.35);
+
+  display: none;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  z-index: 80;
+}
+
+.modal-overlay.show {
+  display: flex;
+}
+
+
+.modal-card {
+  width: 100%;
+  max-width: 480px;
+
+  padding: 26px;
+
+  background: #ffffff;
+
+  border-radius: 16px;
+
+  box-shadow:
+    0 20px 60px
+    rgba(20, 30, 50, 0.18);
+}
+
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+
+  margin-bottom: 24px;
+}
+
+.modal-header h2 {
+  margin: 0;
+
+  font-size: 22px;
+}
+
+.modal-header p {
+  margin: 5px 0 0;
+
+  color: var(--text-light);
+
+  font-size: 14px;
+}
+
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  display: block;
+
+  margin-bottom: 7px;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  height: 46px;
+
+  padding: 0 13px;
+
+  border: 1px solid var(--border);
+  border-radius: 9px;
+
+  outline: 0;
+
+  background: #ffffff;
+
+  font-size: 14px;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: var(--primary);
+}
+
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  margin-top: 24px;
+}
+
+
+.primary-action,
+.secondary-action {
+  min-height: 42px;
+
+  padding: 0 16px;
+
+  border-radius: 9px;
+
+  cursor: pointer;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.primary-action {
+  border: 0;
+
+  background: var(--primary);
+
+  color: #ffffff;
+}
+
+.secondary-action {
+  border:
+    1px solid var(--border);
+
+  background: #ffffff;
+
+  color: var(--text-secondary);
+}
+
+
+
+/* ==============================
+   Invite
+============================== */
+
+.invite-content p {
+  margin: 0;
+
+  color: var(--text-secondary);
+
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+
+.invite-code-box {
+  margin-top: 20px;
+
+  padding: 20px;
+
+  border-radius: 12px;
+
+  background: #f5f8fc;
+
+  text-align: center;
+}
+
+.invite-code-box span {
+  display: block;
+
+  color: var(--text-light);
+
+  font-size: 14px;
+}
+
+.invite-code-box strong {
+  display: block;
+
+  margin-top: 8px;
+
+  color: var(--primary);
+
+  font-size: 28px;
+  letter-spacing: 3px;
+}
+
+
+
+/* ==============================
+   Toast
+============================== */
+
+.toast {
+  position: fixed;
+
+  left: 50%;
+  bottom: 30px;
+
+  transform:
+    translate(-50%, 20px);
+
+  padding: 12px 18px;
+
+  border-radius: 9px;
+
+  background: #1d2b43;
+
+  color: #ffffff;
+
+  font-size: 14px;
+
+  opacity: 0;
+  visibility: hidden;
+
+  transition: 0.2s ease;
+
+  z-index: 100;
+}
+
+.toast.show {
+  opacity: 1;
+  visibility: visible;
+
+  transform:
+    translate(-50%, 0);
+}
+
+
+@media (max-width: 600px) {
+
+  .patient-drawer {
+    width: 100%;
+  }
+
+  .drawer-grid {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+.clickable-summary {
+  cursor: pointer;
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.clickable-summary:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 6px 22px
+    rgba(22, 34, 54, 0.08);
+
+  border-color: #d6deea;
+}
+
+.clickable-summary:active {
+  transform: translateY(0);
+}
+
+.clickable-summary:focus-visible {
+  outline: 3px solid
+    rgba(79, 118, 184, 0.25);
+
+  outline-offset: 3px;
+}

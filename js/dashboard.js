@@ -237,6 +237,11 @@ function initDashboard() {
       item.classList.add("active");
 
       if (item.dataset.navFilter) {
+        // Sidebar 的 Dashboard 類項目被點擊時，先離開其他頁面。
+        window.InneraClinicManagement?.hide();
+        document.getElementById("patientDetailPage")?.classList.add("hidden");
+        document.getElementById("dashboardMain")?.classList.remove("hidden");
+
         setFilter(item.dataset.navFilter);
       }
     });

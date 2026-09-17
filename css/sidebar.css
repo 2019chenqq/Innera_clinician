@@ -1,0 +1,112 @@
+/* Innera Clinical — Sidebar
+   Responsive overrides extracted from the original monolithic stylesheet.
+   Load this AFTER dashboard.css / page-specific CSS.
+*/
+
+/* Tablet: keep a full-width readable sidebar rather than collapsing to icons. */
+@media (max-width: 900px) {
+  .sidebar {
+    width: 230px;
+    padding: 22px 14px;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .main-content,
+  .patient-detail-page,
+  .clinic-management-page {
+    width: calc(100% - 230px);
+    margin-left: 230px;
+  }
+
+  .brand {
+    justify-content: flex-start;
+    padding: 0 8px 24px;
+  }
+
+  .brand-text,
+  .nav-item span:last-child,
+  .sidebar-bottom {
+    display: initial;
+  }
+
+  .brand-text {
+    display: flex;
+  }
+
+  .nav-item {
+    justify-content: flex-start;
+    padding: 0 14px;
+    gap: 12px;
+  }
+
+  .nav-icon {
+    font-size: 20px;
+  }
+
+  .sidebar-bottom {
+    display: block;
+    margin-top: auto;
+  }
+
+  .logout-button {
+    font-size: 14px;
+  }
+
+  .logout-button i {
+    font-size: 16px;
+  }
+}
+
+/* Phone: navigation stays readable and logout remains reachable.
+   Sidebar becomes a compact full-width top panel instead of an icon-only rail. */
+@media (max-width: 600px) {
+  .app-shell {
+    display: block;
+  }
+
+  .sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+    max-height: none;
+    padding: 16px 14px;
+    overflow: visible;
+  }
+
+  .main-content,
+  .patient-detail-page,
+  .clinic-management-page {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .brand {
+    padding-bottom: 14px;
+  }
+
+  .nav-menu {
+    gap: 6px;
+  }
+
+  .nav-item {
+    min-height: 48px;
+    padding: 0 12px;
+    border-radius: 10px;
+  }
+
+  .clinic-info {
+    padding: 16px 12px;
+    margin: 12px 0;
+  }
+
+  .doctor-profile {
+    padding: 8px 10px;
+  }
+
+  .logout-button {
+    min-height: 44px;
+    margin-top: 8px;
+    font-size: 14px;
+  }
+}

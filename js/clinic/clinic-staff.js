@@ -1,0 +1,138 @@
+// js/clinic/clinic-staff.js
+(function () {
+  "use strict";
+
+  const Core = window.InneraClinicCore;
+
+  function roleLabel(staff) {
+    const roleLabels = {
+      admin: "院所管理員",
+      doctor: "醫師",
+      nurse: "護理人員",
+      staff: "行政人員"
+    };
+    return roleLabels[staff.role] || staff.role || "院所人員";
+  }
+
+  function statusLabel(staff) {
+    return staff.active === false ? "已停用" : "啟用中";
+  }
+
+  function renderStaffList(staffList) {
+    const list = document.getElementById("clinicStaffList");
+    const empty = document.getElementById("clinicStaffEmpty");
+    const count = document.getElementById("managementStaffCount");
+    if (!list) return;
+
+    if (count) count.textContent = String(staffList.length);
+
+    if (!staffList.length) {
+      list.innerHTML = "";
+      empty?.classList.remove("hidden");
+      return;
+    }
+
+    empty?.classList.add("hidden");
+
+    list.innerHTML = staffList.map((staff) => {
+      const name = staff.displayName || staff.email || "未命名成員";
+      const avatar = name.charAt(0);
+      const department = staff.department || "未設定科別";
+      const statusClass = staff.active === false ? "inactive" : "active";
+
+      return `
+        <article class="clinic-staff-card">
+          <div class="clinic-staff-main">
+            <div class="clinic-staff-avatar">${avatar}</div>
+            <div class="clinic-staff-info">
+              <strong>${name}</strong>
+              <span>${staff.email || "未設定 Email"}</span>
+            </div>
+          </div>
+          <div class="clinic-staff-actions">
+            <div class="clinic-staff-meta">
+              <span class="staff-meta-item">
+                <i class="bi bi-person-badge"></i>
+                ${roleLabel(staff)}
+              </span>
+              <span class="staff-meta-item">
+                <i class="bi bi-hospital"></i>
+                ${department}
+              </span>
+              <span class="staff-status ${statusClass}">
+                ${statusLabel(staff)}
+              </span>
+            </div>
+            ${staff.active === false ? `
+              <button type="button" class="staff-enable-button"
+                data-staff-uid="${staff.uid}" data-staff-name="${name}">
+                啟用
+              </button>
+            ` : `
+              <button type="button" class="staff-disable-button"
+                data-staff-uid="${staff.uid}" data-staff-name="${name}">
+                停用
+              </button>
+            `}
+          </div>
+        </article>
+      `;
+    }).join("");
+  }
+
+  async function loadClinicStaff() {
+    const currentStaff = Core.getCurrentStaff();
+    if (!currentStaff) throw new Error("尚未取得登入者院所資料");
+
+    const clinicId = currentStaff.clinicId;
+    if (!clinicId) throw new Error("目前帳號沒有 clinicId");
+
+    const loading = document.getElementById("clinicStaffLoading");
+    const clinicName = document.getElementById("managementClinicName");
+    const subtitle = document.getElementById("clinicManagementSubtitle");
+
+    loading?.classList.remove("hidden");
+    if (clinicName) clinicName.textContent = currentStaff.clinicName || clinicId;
+    if (subtitle) {
+      subtitle.textContent = currentStaff.clinicName
+        ? `${currentStaff.clinicName}的院所成員與帳號資料`
+        : "院所成員與帳號資料";
+    }
+
+    try {
+      const snapshot = await Core.getDb()
+        .collection("clinicStaff")
+        .where("clinicId", "==", clinicId)
+        .get();
+
+      const staffList = snapshot.docs.map((doc) => ({
+        uid: doc.id,
+        ...doc.data()
+      }));
+
+      staffList.sort((a, b) => {
+        if (a.active !== false && b.active === false) return -1;
+        if (a.active === false && b.active !== false) return 1;
+        return String(a.displayName || "").localeCompare(
+          String(b.displayName || ""), "zh-Hant"
+        );
+      });
+
+      renderStaffList(staffList);
+      console.info(`[Innera] 院所成員載入成功：${staffList.length} 人`);
+    } catch (error) {
+      console.error("[Innera] 院所成員載入失敗", error);
+      const list = document.getElementById("clinicStaffList");
+      if (list) {
+        list.innerHTML = `<div class="clinic-staff-error">無法讀取院所成員資料</div>`;
+      }
+    } finally {
+      loading?.classList.add("hidden");
+    }
+  }
+
+  window.InneraClinicStaff = {
+    load: loadClinicStaff,
+    render: renderStaffList
+  };
+})();

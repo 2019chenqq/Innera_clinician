@@ -1,0 +1,521 @@
+/* =========================
+   Clinic Management
+========================= */
+
+.clinic-management-page {
+  width: calc(100% - 300px);
+  min-height: 100vh;
+  margin-left: 300px;
+  padding: 42px 48px 60px;
+  max-width: 1800px;
+}
+
+.clinic-management-header {
+  margin-bottom: 24px;
+}
+
+.clinic-management-header h1 {
+  margin: 6px 0 8px;
+  font-size: 30px;
+}
+
+.clinic-management-header p {
+  margin: 0;
+  color: #64748b;
+}
+
+
+.clinic-overview-card {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+
+  padding: 22px 24px;
+  margin-bottom: 24px;
+
+  background: #ffffff;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+}
+
+.clinic-overview-card > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.clinic-overview-label {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.clinic-overview-card strong {
+  font-size: 20px;
+  color: #172033;
+}
+
+
+.clinic-staff-section {
+  padding: 24px;
+
+  background: #ffffff;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+}
+
+
+.clinic-staff-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  margin-top: 20px;
+}
+
+
+.clinic-staff-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  padding: 18px 20px;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+
+  background: #ffffff;
+}
+
+
+.clinic-staff-main {
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+
+  min-width: 0;
+}
+
+
+.clinic-staff-avatar {
+  width: 44px;
+  height: 44px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #e7efff;
+
+  color: #3f69b0;
+
+  font-size: 17px;
+  font-weight: 700;
+}
+
+
+.clinic-staff-info {
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+
+  min-width: 0;
+}
+
+
+.clinic-staff-info strong {
+  font-size: 15px;
+  color: #172033;
+}
+
+
+.clinic-staff-info span {
+  overflow: hidden;
+
+  font-size: 13px;
+  color: #64748b;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+.clinic-staff-meta {
+  display: flex;
+  align-items: center;
+
+  gap: 16px;
+}
+
+
+.staff-meta-item {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  font-size: 13px;
+  color: #64748b;
+}
+
+
+.staff-status {
+  padding: 5px 9px;
+
+  border-radius: 999px;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+
+.staff-status.active {
+  background: #ecfdf3;
+  color: #15803d;
+}
+
+
+.staff-status.inactive {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+
+.clinic-staff-loading,
+.clinic-staff-empty,
+.clinic-staff-error {
+  padding: 24px 0;
+
+  color: #64748b;
+
+  text-align: center;
+}
+
+
+.clinic-staff-error {
+  color: #b91c1c;
+}
+
+@media (max-width: 1500px) {
+  .clinic-management-page {
+    width: calc(100% - 280px);
+    margin-left: 280px;
+    padding: 34px 30px 60px;
+  }
+}
+
+@media (max-width: 900px) {
+  .clinic-management-page {
+    width: calc(100% - 88px);
+    margin-left: 88px;
+    padding: 24px 18px 50px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  .clinic-management-page {
+    padding: 20px;
+  }
+
+  .clinic-overview-card {
+    grid-template-columns: 1fr;
+  }
+
+  .clinic-staff-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .clinic-staff-meta {
+    align-items: flex-start;
+    flex-direction: column;
+
+    gap: 8px;
+  }
+}
+.clinic-staff-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.staff-disable-button {
+  min-height: 34px;
+  padding: 0 12px;
+
+  border: 1px solid #efcaca;
+  border-radius: 8px;
+
+  background: #fff6f6;
+  color: #b95858;
+
+  cursor: pointer;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.staff-disable-button:hover {
+  background: #fbeded;
+}
+
+.staff-enable-button {
+  min-height: 34px;
+  padding: 0 12px;
+
+  border: 1px solid #cce7d8;
+  border-radius: 8px;
+
+  background: #f2fbf6;
+  color: #3f8872;
+
+  cursor: pointer;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.staff-enable-button:hover {
+  background: #edf7f3;
+}
+
+@media (max-width: 768px) {
+  .clinic-staff-actions {
+    width: 100%;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+/* =========================
+   Clinic Settings
+========================= */
+
+.clinic-settings-section {
+  margin-top: 24px;
+  padding: 24px;
+
+  background: #ffffff;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+}
+
+
+.clinic-settings-content {
+  margin-top: 12px;
+}
+
+
+.clinic-settings-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 18px;
+
+  padding: 8px 6px 24px;
+}
+
+
+.clinic-setting-field {
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+
+.clinic-setting-field.full-width {
+  grid-column: 1 / -1;
+}
+
+
+.clinic-setting-field label {
+  color: #64748b;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+
+.clinic-setting-field input {
+  width: 100%;
+  min-height: 46px;
+
+  padding: 0 14px;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+
+  background: #f8fafc;
+
+  color: #172033;
+
+  font: inherit;
+}
+
+
+.clinic-setting-field input[readonly] {
+  cursor: default;
+}
+
+
+.clinic-setting-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  padding: 20px 6px;
+
+  border-top: 1px solid #e8edf4;
+}
+
+
+.clinic-setting-toggle-row strong {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #172033;
+}
+
+
+.clinic-setting-toggle-row p {
+  margin: 0;
+
+  color: #64748b;
+
+  font-size: 13px;
+}
+
+
+.clinic-setting-badge {
+  flex-shrink: 0;
+
+  padding: 6px 11px;
+
+  border-radius: 999px;
+
+  background: #f1f5f9;
+
+  color: #64748b;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+
+.clinic-setting-badge.enabled {
+  background: #ecfdf3;
+  color: #15803d;
+}
+
+
+.clinic-setting-badge.disabled {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+
+.clinic-settings-message {
+  padding: 24px 6px;
+
+  color: #64748b;
+
+  text-align: center;
+}
+
+
+.clinic-settings-message.error {
+  color: #b91c1c;
+}
+
+/* =========================
+   Clinic Settings Actions
+========================= */
+
+.clinic-settings-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.clinic-settings-actions button {
+  min-width: 96px;
+  height: 44px;
+  padding: 0 18px;
+
+  border-radius: 10px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+}
+
+
+/* 編輯 */
+#editClinicSettingsButton {
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: #ffffff;
+}
+
+
+/* 取消 */
+#cancelClinicSettingsButton {
+  border: 1px solid #d7dfeb;
+  background: #ffffff;
+  color: #4b5f7a;
+}
+
+#cancelClinicSettingsButton:hover {
+  background: #f7f9fc;
+}
+
+
+/* 儲存 */
+#saveClinicSettingsButton {
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: #ffffff;
+}
+
+#saveClinicSettingsButton:hover,
+#editClinicSettingsButton:hover {
+  background: #426aa9;
+}
+
+@media (max-width: 768px) {
+
+  .clinic-settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .clinic-setting-field.full-width {
+    grid-column: auto;
+  }
+
+  .clinic-setting-toggle-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+}
