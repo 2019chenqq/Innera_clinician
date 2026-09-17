@@ -355,6 +355,237 @@
     }
   }
 
+async function loadClinicSettings() {
+
+  const currentStaff =
+    window.INNERA_CURRENT_STAFF;
+
+
+  if (!currentStaff) {
+    throw new Error(
+      "尚未取得登入者院所資料"
+    );
+  }
+
+
+  const clinicId =
+    currentStaff.clinicId;
+
+
+  if (!clinicId) {
+    throw new Error(
+      "目前帳號沒有 clinicId"
+    );
+  }
+
+
+  const loading =
+    document.getElementById(
+      "clinicSettingsLoading"
+    );
+
+  const errorBox =
+    document.getElementById(
+      "clinicSettingsError"
+    );
+
+  const content =
+    document.getElementById(
+      "clinicSettingsContent"
+    );
+
+
+  loading?.classList.remove(
+    "hidden"
+  );
+
+  errorBox?.classList.add(
+    "hidden"
+  );
+
+  content?.classList.add(
+    "hidden"
+  );
+
+
+  try {
+
+    const db = getDb();
+
+
+    const snapshot =
+      await db
+        .collection("clinics")
+        .doc(clinicId)
+        .get();
+
+
+    if (!snapshot.exists) {
+      throw new Error(
+        "找不到院所設定資料"
+      );
+    }
+
+
+    const clinic =
+      snapshot.data();
+
+
+    const nameInput =
+      document.getElementById(
+        "clinicSettingName"
+      );
+
+    const idInput =
+      document.getElementById(
+        "clinicSettingId"
+      );
+
+    const phoneInput =
+      document.getElementById(
+        "clinicSettingPhone"
+      );
+
+    const departmentInput =
+      document.getElementById(
+        "clinicSettingDepartment"
+      );
+
+    const addressInput =
+      document.getElementById(
+        "clinicSettingAddress"
+      );
+
+    const inviteStatus =
+      document.getElementById(
+        "clinicSettingInviteStatus"
+      );
+
+    const activeStatus =
+      document.getElementById(
+        "clinicSettingActiveStatus"
+      );
+
+
+    if (nameInput) {
+      nameInput.value =
+        clinic.clinicName || "";
+    }
+
+
+    if (idInput) {
+      idInput.value =
+        clinicId;
+    }
+
+
+    if (phoneInput) {
+      phoneInput.value =
+        clinic.phone || "";
+    }
+
+
+    if (departmentInput) {
+      departmentInput.value =
+        clinic.defaultDepartment || "";
+    }
+
+
+    if (addressInput) {
+      addressInput.value =
+        clinic.address || "";
+    }
+
+
+    if (inviteStatus) {
+
+      const enabled =
+        clinic.allowPatientInvite === true;
+
+
+      inviteStatus.textContent =
+        enabled
+          ? "允許"
+          : "未允許";
+
+
+      inviteStatus.classList.toggle(
+        "enabled",
+        enabled
+      );
+
+
+      inviteStatus.classList.toggle(
+        "disabled",
+        !enabled
+      );
+
+    }
+
+
+    if (activeStatus) {
+
+      const active =
+        clinic.active === true;
+
+
+      activeStatus.textContent =
+        active
+          ? "啟用中"
+          : "已停用";
+
+
+      activeStatus.classList.toggle(
+        "enabled",
+        active
+      );
+
+
+      activeStatus.classList.toggle(
+        "disabled",
+        !active
+      );
+
+    }
+
+
+    content?.classList.remove(
+      "hidden"
+    );
+
+
+    console.info(
+      "[Innera] 院所設定載入成功",
+      {
+        clinicId,
+        clinicName:
+          clinic.clinicName
+      }
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "[Innera] 院所設定載入失敗",
+      error
+    );
+
+
+    errorBox?.classList.remove(
+      "hidden"
+    );
+
+
+  } finally {
+
+    loading?.classList.add(
+      "hidden"
+    );
+
+  }
+
+}
 
   function showClinicManagement() {
 
@@ -421,6 +652,7 @@
 
 
     loadClinicStaff();
+    loadClinicSettings();
 
 
     window.scrollTo({
@@ -890,7 +1122,313 @@ async function enableClinicStaff(
   }
 }
 
-  function initClinicManagement() {
+let originalClinicSettings = null;
+
+
+function setClinicSettingsEditMode(editing) {
+
+  const currentStaff =
+    window.INNERA_CURRENT_STAFF;
+
+
+  if (
+    !currentStaff ||
+    currentStaff.role !== "admin"
+  ) {
+    return;
+  }
+
+
+  const editableIds = [
+    "clinicSettingName",
+    "clinicSettingPhone",
+    "clinicSettingDepartment",
+    "clinicSettingAddress"
+  ];
+
+
+  editableIds.forEach((id) => {
+
+    const input =
+      document.getElementById(id);
+
+    if (!input) return;
+
+
+    if (editing) {
+      input.removeAttribute("readonly");
+    } else {
+      input.setAttribute("readonly", "");
+    }
+
+  });
+
+
+  document
+    .getElementById("editClinicSettingsButton")
+    ?.classList.toggle(
+      "hidden",
+      editing
+    );
+
+
+  document
+    .getElementById("cancelClinicSettingsButton")
+    ?.classList.toggle(
+      "hidden",
+      !editing
+    );
+
+
+  document
+    .getElementById("saveClinicSettingsButton")
+    ?.classList.toggle(
+      "hidden",
+      !editing
+    );
+
+}
+
+function startEditClinicSettings() {
+
+  const currentStaff =
+    window.INNERA_CURRENT_STAFF;
+
+
+  if (
+    !currentStaff ||
+    currentStaff.role !== "admin"
+  ) {
+
+    if (typeof showToast === "function") {
+      showToast(
+        "只有院所管理員可以修改院所設定"
+      );
+    }
+
+    return;
+  }
+
+
+  originalClinicSettings = {
+
+    clinicName:
+      document
+        .getElementById(
+          "clinicSettingName"
+        )
+        ?.value || "",
+
+    phone:
+      document
+        .getElementById(
+          "clinicSettingPhone"
+        )
+        ?.value || "",
+
+    defaultDepartment:
+      document
+        .getElementById(
+          "clinicSettingDepartment"
+        )
+        ?.value || "",
+
+    address:
+      document
+        .getElementById(
+          "clinicSettingAddress"
+        )
+        ?.value || ""
+
+  };
+
+
+  setClinicSettingsEditMode(true);
+
+}
+
+
+function cancelEditClinicSettings() {
+
+  if (!originalClinicSettings) {
+    setClinicSettingsEditMode(false);
+    return;
+  }
+
+  document.getElementById(
+    "clinicSettingName"
+  ).value =
+    originalClinicSettings.clinicName;
+
+  document.getElementById(
+    "clinicSettingPhone"
+  ).value =
+    originalClinicSettings.phone;
+
+  document.getElementById(
+    "clinicSettingDepartment"
+  ).value =
+    originalClinicSettings.defaultDepartment;
+
+  document.getElementById(
+    "clinicSettingAddress"
+  ).value =
+    originalClinicSettings.address;
+
+  setClinicSettingsEditMode(false);
+
+}
+
+async function saveClinicSettings() {
+
+  const currentStaff =
+    window.INNERA_CURRENT_STAFF;
+
+
+  if (
+    !currentStaff ||
+    currentStaff.role !== "admin"
+  ) {
+
+    if (typeof showToast === "function") {
+      showToast(
+        "只有院所管理員可以修改院所設定"
+      );
+    }
+
+    return;
+  }
+
+
+  const clinicId =
+    currentStaff.clinicId;
+
+
+  const clinicName =
+    document
+      .getElementById(
+        "clinicSettingName"
+      )
+      .value
+      .trim();
+
+
+  const phone =
+    document
+      .getElementById(
+        "clinicSettingPhone"
+      )
+      .value
+      .trim();
+
+
+  const defaultDepartment =
+    document
+      .getElementById(
+        "clinicSettingDepartment"
+      )
+      .value
+      .trim();
+
+
+  const address =
+    document
+      .getElementById(
+        "clinicSettingAddress"
+      )
+      .value
+      .trim();
+
+
+  if (!clinicName) {
+
+    if (typeof showToast === "function") {
+      showToast(
+        "院所名稱不可為空"
+      );
+    }
+
+    return;
+  }
+
+
+  const saveButton =
+    document.getElementById(
+      "saveClinicSettingsButton"
+    );
+
+
+  if (saveButton) {
+    saveButton.disabled = true;
+    saveButton.textContent = "儲存中...";
+  }
+
+
+  try {
+
+    const db = getDb();
+
+
+    await db
+      .collection("clinics")
+      .doc(clinicId)
+      .update({
+
+        clinicName,
+        phone,
+        defaultDepartment,
+        address,
+
+        updatedAt:
+          firebase.firestore
+            .FieldValue
+            .serverTimestamp()
+
+      });
+
+
+    setClinicSettingsEditMode(false);
+
+
+    if (typeof showToast === "function") {
+      showToast(
+        "院所設定已更新"
+      );
+    }
+
+
+    await loadClinicSettings();
+
+
+  } catch (error) {
+
+    console.error(
+      "[Innera] 儲存院所設定失敗",
+      error
+    );
+
+
+    if (typeof showToast === "function") {
+      showToast(
+        "儲存院所設定失敗"
+      );
+    }
+
+
+  } finally {
+
+    if (saveButton) {
+      saveButton.disabled = false;
+      saveButton.textContent =
+        "儲存設定";
+    }
+
+  }
+
+}
+
+
+function initClinicManagement() {
 
   const nav =
     document.getElementById(
@@ -1028,13 +1566,46 @@ async function enableClinicStaff(
             staffName
           );
 
+          return;
         }
 
       }
     );
 
-}
 
+  // 編輯院所設定
+  document
+    .getElementById(
+      "editClinicSettingsButton"
+    )
+    ?.addEventListener(
+      "click",
+      startEditClinicSettings
+    );
+
+
+  // 取消編輯院所設定
+  document
+    .getElementById(
+      "cancelClinicSettingsButton"
+    )
+    ?.addEventListener(
+      "click",
+      cancelEditClinicSettings
+    );
+
+
+  // 儲存院所設定
+  document
+    .getElementById(
+      "saveClinicSettingsButton"
+    )
+    ?.addEventListener(
+      "click",
+      saveClinicSettings
+    );
+
+}
 
 window.InneraClinicManagement = {
   show: showClinicManagement,

@@ -730,7 +730,162 @@
     ></div>
 
   </section>
+<section class="clinic-settings-section">
 
+  <div class="section-header">
+    <div>
+      <h2>院所設定</h2>
+      <p>
+        管理院所基本資料與患者連結設定。
+      </p>
+    </div>
+  </div>
+<div class="clinic-settings-actions">
+  <button
+    type="button"
+    class="secondary-button"
+    id="editClinicSettingsButton"
+  >
+    編輯
+  </button>
+
+  <button
+    type="button"
+    class="secondary-button hidden"
+    id="cancelClinicSettingsButton"
+  >
+    取消
+  </button>
+
+  <button
+    type="button"
+    class="primary-action hidden"
+    id="saveClinicSettingsButton"
+  >
+    儲存設定
+  </button>
+</div>
+  <div
+    id="clinicSettingsLoading"
+    class="clinic-settings-message"
+  >
+    正在讀取院所設定...
+  </div>
+
+  <div
+    id="clinicSettingsError"
+    class="clinic-settings-message error hidden"
+  >
+    無法讀取院所設定。
+  </div>
+
+  <div
+    id="clinicSettingsContent"
+    class="clinic-settings-content hidden"
+  >
+
+    <div class="clinic-settings-grid">
+
+      <div class="clinic-setting-field">
+        <label>院所名稱</label>
+
+        <input
+          type="text"
+          id="clinicSettingName"
+          readonly
+        >
+      </div>
+
+
+      <div class="clinic-setting-field">
+        <label>院所代碼</label>
+
+        <input
+          type="text"
+          id="clinicSettingId"
+          readonly
+        >
+      </div>
+
+
+      <div class="clinic-setting-field">
+        <label>聯絡電話</label>
+
+        <input
+          type="text"
+          id="clinicSettingPhone"
+          readonly
+        >
+      </div>
+
+
+      <div class="clinic-setting-field">
+        <label>預設科別</label>
+
+        <input
+          type="text"
+          id="clinicSettingDepartment"
+          readonly
+        >
+      </div>
+
+
+      <div class="clinic-setting-field full-width">
+        <label>地址</label>
+
+        <input
+          type="text"
+          id="clinicSettingAddress"
+          readonly
+        >
+      </div>
+
+    </div>
+
+
+    <div class="clinic-setting-toggle-row">
+
+      <div>
+        <strong>允許患者邀請連結</strong>
+
+        <p>
+          開啟後，院所可產生邀請碼，
+          讓患者將心域資料連結至此院所。
+        </p>
+      </div>
+
+      <span
+        id="clinicSettingInviteStatus"
+        class="clinic-setting-badge"
+      >
+        —
+      </span>
+
+    </div>
+
+
+    <div class="clinic-setting-toggle-row">
+
+      <div>
+        <strong>院所狀態</strong>
+
+        <p>
+          顯示目前此院所是否為啟用狀態。
+        </p>
+      </div>
+
+      <span
+        id="clinicSettingActiveStatus"
+        class="clinic-setting-badge"
+      >
+        —
+      </span>
+
+    </div>
+
+  </div>
+
+</section>
 </section>
 
 <!-- =========================
