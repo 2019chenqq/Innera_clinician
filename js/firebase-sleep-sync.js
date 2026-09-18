@@ -6,7 +6,61 @@
 (function () {
   let syncInProgress = false;
   let lastSyncedUid = null;
+async function getPatientSleepRecords(patientId, days = 7) {
+  if (!patientId) {
+    throw new Error("patientId 不可為空。");
+  }
 
+  if (typeof firebase === "undefined") {
+    throw new Error("Firebase SDK 尚未載入。");
+  }
+
+  const db = firebase.firestore();
+
+  // 1. 用 Innera Patient ID 找到對應 App UID
+  const patientSnap = await db
+    .collection("inneraPatients")
+    .doc(patientId)
+    .get();
+
+  if (!patientSnap.exists) {
+    throw new Error(`找不到患者：${patientId}`);
+  }
+
+  const patientData = patientSnap.data();
+
+  if (!patientData?.linked || !patientData?.firebaseUid) {
+    throw new Error(`患者 ${patientId} 尚未完成心域連結。`);
+  }
+
+  const patientUid = patientData.firebaseUid;
+
+  const clinicId =
+    window.INNERA_DEMO_CLINIC_ID ||
+    "innera-demo-clinic";
+
+console.log("[Sleep Debug] patientId =", patientId);
+console.log("[Sleep Debug] firebaseUid =", patientUid);
+console.log("[Sleep Debug] clinicId =", clinicId);
+
+  // 2. 讀取患者分享給目前院所的睡眠資料
+  const snapshot = await db
+  .collection("clinicalShares")
+  .doc(patientUid)
+  .collection("clinics")
+  .doc(clinicId)
+  .collection("sleepRecords")
+  .limit(days)
+  .get();
+
+  // 趨勢圖要由舊到新排列
+  return snapshot.docs
+    .map((doc) => ({
+      id: doc.id,
+      ...doc.data()
+    }))
+    .reverse();
+}
   async function syncRealSleepData() {
     if (syncInProgress) return;
 
@@ -25,14 +79,12 @@
     syncInProgress = true;
 
     try {
-      const records =
-  await inneraFirebase.getPatientRecentSleepRecords({
-    patientId: "P000001",
-    days: 7,
-    clinicId:
-      window.INNERA_DEMO_CLINIC_ID ||
-      "innera-demo-clinic"
-  });
+      const patientId =
+  window.INNERA_REAL_SLEEP_PATIENT_ID ||
+  "P000001";
+
+const records =
+  await getPatientSleepRecords(patientId, 7);
 
 const summary =
   inneraFirebase.calculateSleepSummary(records);
@@ -42,8 +94,7 @@ const data = {
   summary
 };
 
-      const patientId = window.INNERA_REAL_SLEEP_PATIENT_ID || "P000001";
-      const patient =
+        const patient =
         Array.isArray(window.patients)
           ? window.patients.find((item) => item.id === patientId)
           : (typeof patients !== "undefined"
@@ -66,6 +117,21 @@ const data = {
       if (typeof renderPatients === "function") {
         renderPatients();
       }
+
+// 如果目前正在查看這位病人的完整個案頁，
+// Firebase 睡眠載入完成後立即重新渲染。
+const detailPage =
+  document.getElementById("patientDetailPage");
+
+if (
+  typeof state !== "undefined" &&
+  state.activePatientId === patientId &&
+  detailPage &&
+  !detailPage.classList.contains("hidden") &&
+  typeof renderPatientDetail === "function"
+) {
+  renderPatientDetail(patient);
+}
 
       document.dispatchEvent(
         new CustomEvent("innera-real-sleep-loaded", {

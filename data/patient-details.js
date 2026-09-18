@@ -201,47 +201,64 @@ function applyRealSleepDataToPatient(patient, sleepData) {
   }
 
   // 趨勢資料
-  if (patient.trend) {
-  // 真實睡眠資料另外存，不覆蓋原本情緒 / 能量的日期
-  patient.trend.sleepDates = records.map((record) => {
-    const parts = record.dateId.split("-");
-    return `${Number(parts[1])}/${Number(parts[2])}`;
-  });
-
-  patient.trend.sleepHours = records.map((record) => {
-    if (typeof record.durationMinutes !== "number") return null;
-
-    return Math.round(
-      (record.durationMinutes / 60) * 10
-    ) / 10;
-  });
+  // 趨勢資料
+// Firestore 新增的患者可能原本沒有 trend，先建立空物件。
+if (!patient.trend) {
+  patient.trend = {};
 }
 
+// 真實睡眠資料另外存，不覆蓋未來的情緒 / 能量資料
+console.log("[Sleep Record Debug]", records[0]);
+patient.trend.sleepDates = records.map((record) => {
+  if (!record.id) return "";
+
+  const parts = record.id.split("-");
+
+  if (parts.length !== 3) return record.id;
+
+  return `${Number(parts[1])}/${Number(parts[2])}`;
+});
+
+patient.trend.sleepHours = records.map((record) => {
+  if (typeof record.durationMinutes !== "number") return null;
+
+  return Math.round(
+    (record.durationMinutes / 60) * 10
+  ) / 10;
+});
+
   // 睡眠明細表
-  if (patient.records) {
-    patient.records.sleep = records
-      .slice()
-      .reverse()
-      .map((record) => {
-        const duration =
-          typeof record.durationMinutes === "number"
-            ? `${Math.floor(record.durationMinutes / 60)}h ${
-                record.durationMinutes % 60
-              }m`
-            : "—";
+  // 睡眠明細表
+if (!patient.records) {
+  patient.records = {};
+}
 
-        const quality =
-          typeof record.quality === "number"
-            ? `${record.quality} / 5`
-            : "—";
+patient.records.sleep = records
+  .slice()
+  .reverse()
+  .map((record) => {
+    const duration =
+      typeof record.durationMinutes === "number"
+        ? `${Math.floor(record.durationMinutes / 60)}h ${
+            record.durationMinutes % 60
+          }m`
+        : "—";
 
-        return [
-          record.dateId.slice(5).replace("-", "/"),
-          record.sleepStart || "—",
-          record.wakeTime || "—",
-          duration,
-          quality
-        ];
-      });
-  }
+    const quality =
+      typeof record.quality === "number"
+        ? `${record.quality} / 5`
+        : "—";
+
+    const sleepDate = record.dateId || record.id || "";
+
+return [
+  sleepDate
+    ? sleepDate.slice(5).replace("-", "/")
+    : "—",
+  record.sleepStart || "—",
+  record.wakeTime || "—",
+  duration,
+  quality
+];
+  });
 }

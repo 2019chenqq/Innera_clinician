@@ -342,11 +342,21 @@ function renderDetailTrend(trend) {
   ===================================== */
 
   function renderSleepChart() {
-    const dates =
-      trend.sleepDates || [];
+  // 優先使用 Firebase 真實睡眠資料；
+  // 若尚未載入，則使用 Demo trend 的日期與睡眠資料。
+  const hasRealSleep =
+    Array.isArray(trend.sleepDates) &&
+    trend.sleepDates.length > 0 &&
+    Array.isArray(trend.sleepHours) &&
+    trend.sleepHours.length > 0;
 
-    const values =
-      trend.sleepHours || [];
+  const dates = hasRealSleep
+    ? trend.sleepDates
+    : (trend.dates || []);
+
+  const values = hasRealSleep
+    ? trend.sleepHours
+    : (trend.sleep || []);
 
     if (!dates.length || !values.length) {
       return `
@@ -477,7 +487,7 @@ function renderDetailTrend(trend) {
         <div class="detail-subtrend-header">
           <div>
             <strong>睡眠時數</strong>
-            <span>心域 App 真實紀錄</span>
+<span>${hasRealSleep ? "心域 App 真實紀錄" : "Demo 模擬資料"}</span>
           </div>
 
           <div class="detail-subtrend-legend">
