@@ -80,44 +80,94 @@
   }
 
 
-  async function loadStaffProfile(user) {
-    const { db } = getFirebase();
+ async function loadStaffProfile(user) {
+  const { db } = getFirebase();
 
-console.log("[Innera] 登入 UID =", user.uid);
+  console.log("[Innera] 登入 UID =", user.uid);
   console.log("[Innera] 登入 Email =", user.email);
 
-    const snapshot =
-      await db
-        .collection("clinicStaff")
-        .doc(user.uid)
-        .get();
+  const snapshot =
+    await db
+      .collection("clinicStaff")
+      .doc(user.uid)
+      .get();
 
-    if (!snapshot.exists) {
-      throw new Error(
-        "此帳號尚未建立院所人員資料"
-      );
-    }
-
-    const profile = snapshot.data();
-
-    if (profile.active === false) {
-      throw new Error(
-        "此院所帳號已停用"
-      );
-    }
-
-    if (!profile.clinicId) {
-      throw new Error(
-        "此帳號尚未設定所屬院所"
-      );
-    }
-
-    return {
-      uid: user.uid,
-      email: user.email,
-      ...profile
-    };
+  if (!snapshot.exists) {
+    throw new Error(
+      "此帳號尚未建立院所人員資料"
+    );
   }
+
+  const profile = snapshot.data();
+
+
+  // 相容舊格式 active:false
+  // 與新格式 status:"inactive"
+  if (
+    profile.active === false ||
+    profile.status === "inactive"
+  ) {
+    throw new Error(
+      "此院所帳號已停用"
+    );
+  }
+
+
+  if (!profile.clinicId) {
+    throw new Error(
+      "此帳號尚未設定所屬院所"
+    );
+  }
+
+
+  // ========================================
+  // 檢查院所是否仍啟用
+  // ========================================
+
+  const clinicSnapshot =
+    await db
+      .collection("clinics")
+      .doc(profile.clinicId)
+      .get();
+
+
+  if (!clinicSnapshot.exists) {
+    throw new Error(
+      "找不到所屬院所資料"
+    );
+  }
+
+
+  const clinic =
+    clinicSnapshot.data();
+
+
+  if (clinic.status !== "active") {
+    throw new Error(
+      "此院所目前已停用，請聯絡心域平台管理員"
+    );
+  }
+
+
+  return {
+    uid: user.uid,
+    email: user.email,
+
+    ...profile,
+
+    // 順便把正式院所資料帶進去
+    clinicName:
+      clinic.name ||
+      profile.clinicName ||
+      profile.clinicId,
+
+    clinicCode:
+      clinic.clinicCode || null,
+
+    clinicStatus:
+      clinic.status
+  };
+}
 
 
   function renderStaffProfile(staff) {
@@ -152,15 +202,17 @@ console.log("[Innera] 登入 UID =", user.uid);
 
     if (staffName) {
       staffName.textContent =
+        staff.name ||
         staff.displayName ||
         staff.email ||
-        "院所人員";
+        "院所人員"
     }
 
 
     if (staffRole) {
       const roleLabels = {
         admin: "院所管理員",
+        clinic_admin: "院所管理員",
         doctor: staff.department || "醫師",
         nurse: "護理人員",
         staff: "行政人員"
@@ -175,6 +227,7 @@ console.log("[Innera] 登入 UID =", user.uid);
 
     if (staffAvatar) {
       const name =
+        staff.name ||
         staff.displayName ||
         staff.email ||
         "?";
