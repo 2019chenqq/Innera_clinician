@@ -18,7 +18,7 @@ function initModals() {
   const addPatientForm = document.getElementById("addPatientForm");
   const inviteModal = document.getElementById("inviteModal");
 
-  document.querySelector(".secondary-button")
+  document.getElementById("addPatientButton")
     ?.addEventListener("click", openAddPatientModal);
 
   document.getElementById("closeAddPatientModal")
