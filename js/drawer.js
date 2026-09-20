@@ -29,23 +29,24 @@ function openDrawer(row) {
       status.textContent.trim();
   }
 
-  const metrics = row.querySelectorAll(".metric-block");
-
-  if (metrics[0]) {
     document.getElementById("drawerMood").textContent =
-      metrics[0].querySelector("strong")?.textContent || "-";
+    selectedPatient?.currentMood || "—";
 
     document.getElementById("drawerMoodSub").textContent =
-      metrics[0].querySelector("span")?.textContent || "";
-  }
+      selectedPatient?.currentMood
+        ? "最新快速紀錄"
+        : "尚無情緒紀錄";
 
-  if (metrics[1]) {
     document.getElementById("drawerSleep").textContent =
-      metrics[1].querySelector("strong")?.textContent || "-";
+      selectedPatient?.sleep || "—";
 
     document.getElementById("drawerSleepSub").textContent =
-      metrics[1].querySelector("span")?.textContent || "";
-  }
+      selectedPatient?.sleepSub || "暫無睡眠資料";
+
+    document.getElementById("drawerAiSummary").textContent =
+      selectedPatient?.aiSummary?.patternSummary ||
+      selectedPatient?.summary ||
+      "目前沒有足夠摘要資料。";
 
   const drawerChanges = document.getElementById("drawerChanges");
   drawerChanges.innerHTML = "";

@@ -15,6 +15,34 @@
     return text || fallback;
   }
 
+  function formatUpdatedTime(value) {
+    if (!value) return "—";
+
+    const date =
+      typeof value.toDate === "function"
+        ? value.toDate()
+        : value instanceof Date
+          ? value
+          : new Date(value);
+
+    if (Number.isNaN(date.getTime())) return "—";
+
+    const diffMs = Date.now() - date.getTime();
+    const diffMinutes = Math.floor(diffMs / 60000);
+
+    if (diffMinutes < 1) return "剛剛";
+    if (diffMinutes < 60) return `${diffMinutes} 分鐘前`;
+
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours < 24) return `${diffHours} 小時前`;
+
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays < 7) return `${diffDays} 天前`;
+
+    return `${date.getMonth() + 1}/${date.getDate()}`;
+  }
+
+
   function toNumber(value, fallback = 9999) {
     const number = Number(value);
     return Number.isFinite(number) ? number : fallback;
@@ -47,7 +75,7 @@
       attention: data.attention === true,
       viewed: data.viewed === true,
 
-      status: linked ? "已連結心域" : null,
+      status: null,
       statusType: linked ? "stable" : null,
 
       mood: linked ? "—" : null,
@@ -56,11 +84,10 @@
       sleep: linked ? "—" : null,
       sleepSub: linked ? "讀取中" : null,
 
-      changes: linked
-        ? [{ text: "已連結心域", type: "" }]
-        : [],
+      changes: [],
 
-      updated: linked ? "剛剛" : "—",
+      updatedAt: data.updatedAt || null,
+      updated: linked ? formatUpdatedTime(data.updatedAt) : "—",
 
       firebaseUid: data.firebaseUid || null,
       clinicId: data.clinicId || getClinicId(),
@@ -101,30 +128,41 @@
       };
 
       if (incoming.linked) {
-        // 如果剛從未連結 → 已連結，立即把畫面狀態改掉。
-        if (!existing.linked) {
-          list[index].status = "已連結心域";
-          list[index].statusType = "stable";
-          list[index].mood = "—";
-          list[index].moodSub = "尚未串接";
-          list[index].sleep = "—";
-          list[index].sleepSub = "讀取中";
-          list[index].changes = [
-            { text: "已連結心域", type: "" }
-          ];
-          list[index].updated = "剛剛";
-        }
-      } else {
-        // 尚未連結時，不應顯示心域資料。
+
+      if (!existing.linked) {
         list[index].status = null;
-        list[index].statusType = null;
-        list[index].mood = null;
-        list[index].moodSub = null;
-        list[index].sleep = null;
-        list[index].sleepSub = null;
+        list[index].statusType = "stable";
+
+        list[index].mood = "—";
+        list[index].moodSub = "尚未串接";
+
+        list[index].sleep = "—";
+        list[index].sleepSub = "讀取中";
+
         list[index].changes = [];
-        list[index].updated = "—";
       }
+
+      // 不論是否剛連結，都以 Firestore 最新時間為準
+      list[index].updatedAt = incoming.updatedAt;
+      list[index].updated = incoming.updated;
+
+    } else {
+
+      // 尚未連結時，不應顯示心域資料
+      list[index].status = null;
+      list[index].statusType = null;
+
+      list[index].mood = null;
+      list[index].moodSub = null;
+
+      list[index].sleep = null;
+      list[index].sleepSub = null;
+
+      list[index].changes = [];
+
+      list[index].updatedAt = null;
+      list[index].updated = "—";
+    }
 
       return;
     }

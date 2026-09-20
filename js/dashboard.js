@@ -33,6 +33,17 @@ function renderPatients() {
     const displayName = maskPatientName(patient.fullName);
 
     if (patient.linked) {
+      const domainStatuses = Object.values(patient.aiSummary?.domains || {})
+        .map((domain) => typeof domain?.status === "string" ? domain.status.trim() : "")
+        .map((status) => status.replace(/^[\s↑↓↗↘→↔⚠⚠️•·:：-]+/u, "").trim())
+        .filter((status) => status && status !== "資料不足");
+      const changedStatuses = domainStatuses.filter((status) => !status.includes("穩定"));
+      const displayStatus = patient.attention === true
+        ? "需要留意"
+        : changedStatuses.length
+          ? "近期有變化"
+          : domainStatuses.length ? "相對穩定" : "資料不足";
+
       const changeHtml = patient.changes
         .map((change) => {
           const typeClass = change.type ? ` ${change.type}` : "";
@@ -63,13 +74,17 @@ function renderPatients() {
 
         <div>
           <span class="mood-status ${patient.statusType}">
-            ${patient.status}
+            ${displayStatus}
           </span>
         </div>
 
         <div class="metric-block">
-          <strong>${patient.mood}</strong>
-          <span>${patient.moodSub}</span>
+          <strong>
+            ${patient.currentMoodCompact || patient.currentMood || "—"}
+          </strong>
+          <span>
+            ${patient.currentMood ? "最新快速紀錄" : "尚無情緒紀錄"}
+          </span>
         </div>
 
         <div class="metric-block">

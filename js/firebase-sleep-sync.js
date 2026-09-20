@@ -6,7 +6,7 @@
 (function () {
   let syncInProgress = false;
   let lastSyncedUid = null;
-async function getPatientSleepRecords(patientId, days = 7) {
+async function getPatientSleepRecords(patientId, days = 30) {
   if (!patientId) {
     throw new Error("patientId 不可為空。");
   }
@@ -59,7 +59,7 @@ console.log("[Sleep Debug] clinicId =", clinicId);
       id: doc.id,
       ...doc.data()
     }))
-    .reverse();
+    .sort((a, b) => a.id.localeCompare(b.id));
 }
   async function syncRealSleepData() {
     if (syncInProgress) return;
@@ -84,7 +84,7 @@ console.log("[Sleep Debug] clinicId =", clinicId);
   "P000001";
 
 const records =
-  await getPatientSleepRecords(patientId, 7);
+  await getPatientSleepRecords(patientId, 30);
 
 const summary =
   inneraFirebase.calculateSleepSummary(records);

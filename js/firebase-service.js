@@ -3,7 +3,7 @@
 // 作用：
 // 1. 使用 Google 登入同一個 Firebase 專案
 // 2. 讀取 clinicalShares/{uid}/clinics/{clinicId}/sleepRecords
-// 3. 回傳整理好的近 7 日睡眠資料
+// 3. 回傳整理好的近 30 日睡眠資料
 
 (function () {
   let app = null;
@@ -111,7 +111,7 @@
 
   async function getPatientRecentSleepRecords({
   patientId,
-  days = 7,
+  days = 30,
   clinicId
 } = {}) {
   const user = getAuth().currentUser;
@@ -165,7 +165,118 @@
   return records.slice(-days);
 }
 
-  async function getRecentSleepRecords({ days = 7, clinicId } = {}) {
+  async function getPatientHealthEvents({ patientId, days = 30, clinicId } = {}) {
+    if (!getAuth().currentUser) throw new Error("尚未登入 Firebase。");
+    if (!patientId) throw new Error("patientId 不可為空");
+    const patientSnap = await getDb().collection("inneraPatients").doc(patientId).get();
+    if (!patientSnap.exists) throw new Error(`找不到患者：${patientId}`);
+    const patient = patientSnap.data();
+    if (!patient.linked || !patient.firebaseUid) throw new Error("此患者尚未連結心域");
+    const targetClinicId = clinicId || window.INNERA_ACTIVE_CLINIC_ID ||
+      window.INNERA_DEMO_CLINIC_ID || "innera-demo-clinic";
+    const since = new Date();
+    since.setHours(0, 0, 0, 0);
+    since.setDate(since.getDate() - Math.max(0, days - 1));
+    const snapshot = await getDb()
+      .collection("clinicalShares").doc(patient.firebaseUid)
+      .collection("clinics").doc(targetClinicId)
+      .collection("healthEvents")
+      .where("timestamp", ">=", firebase.firestore.Timestamp.fromDate(since))
+      .orderBy("timestamp", "desc")
+      .get();
+    return snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        timestamp: timestampToDate(data.timestamp),
+        emotions: Array.isArray(data.emotions) ? data.emotions : [],
+        symptoms: Array.isArray(data.symptoms) ? data.symptoms : [],
+        stateChanges: data.stateChanges || {},
+        context: data.context || "",
+        note: data.note || ""
+      };
+    });
+  }
+
+  async function getPatientDailyCheckIns({ patientId, days = 30, clinicId } = {}) {
+    if (!getAuth().currentUser) throw new Error("尚未登入 Firebase。");
+    if (!patientId) throw new Error("patientId 不可為空");
+    const patientSnap = await getDb().collection("inneraPatients").doc(patientId).get();
+    if (!patientSnap.exists) throw new Error(`找不到患者：${patientId}`);
+    const patient = patientSnap.data();
+    if (!patient.linked || !patient.firebaseUid) throw new Error("此患者尚未連結心域");
+    const targetClinicId = clinicId || window.INNERA_ACTIVE_CLINIC_ID ||
+      window.INNERA_DEMO_CLINIC_ID || "innera-demo-clinic";
+    const since = new Date();
+    since.setHours(0, 0, 0, 0);
+    since.setDate(since.getDate() - Math.max(0, days - 1));
+    const snapshot = await getDb()
+      .collection("clinicalShares").doc(patient.firebaseUid)
+      .collection("clinics").doc(targetClinicId)
+      .collection("dailyCheckIns")
+      .where("date", ">=", firebase.firestore.Timestamp.fromDate(since))
+      .orderBy("date", "desc")
+      .get();
+    return snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        date: timestampToDate(data.date),
+        overallMood: data.overallMood,
+        healthStatus: data.healthStatus,
+        noSpecialEvent: data.noSpecialEvent === true
+      };
+    });
+  }
+
+async function getPatientAiSummary({
+  patientId,
+  clinicId
+} = {}) {
+  if (!getAuth().currentUser) {
+    throw new Error("尚未登入 Firebase。");
+  }
+
+  if (!patientId) {
+    throw new Error("patientId 不可為空");
+  }
+
+  const patientSnap = await getDb()
+    .collection("inneraPatients")
+    .doc(patientId)
+    .get();
+
+  if (!patientSnap.exists) {
+    throw new Error(`找不到患者：${patientId}`);
+  }
+
+  const patient = patientSnap.data();
+
+  if (!patient.linked || !patient.firebaseUid) {
+    throw new Error("此患者尚未連結心域");
+  }
+
+  const targetClinicId =
+    clinicId ||
+    window.INNERA_ACTIVE_CLINIC_ID ||
+    window.INNERA_DEMO_CLINIC_ID ||
+    "innera-demo-clinic";
+
+  const summarySnap = await getDb()
+    .collection("clinicalShares")
+    .doc(patient.firebaseUid)
+    .collection("clinics")
+    .doc(targetClinicId)
+    .collection("aiSummaries")
+    .doc("current")
+    .get();
+
+  if (!summarySnap.exists) {
+    return null;
+  }
+
+  return summarySnap.data();
+}
+
+  async function getRecentSleepRecords({ days = 30, clinicId } = {}) {
     const user = getAuth().currentUser;
     if (!user) {
       throw new Error("尚未登入 Firebase，請先執行 Google 測試登入。");
@@ -246,7 +357,7 @@ return records.slice(-days);
     };
   }
 
-  async function loadMyRecentSleep({ days = 7, clinicId } = {}) {
+  async function loadMyRecentSleep({ days = 30, clinicId } = {}) {
     const records = await getRecentSleepRecords({ days, clinicId });
     return {
       records,
@@ -261,6 +372,9 @@ window.InneraFirebase = {
 
   getRecentSleepRecords,
   getPatientRecentSleepRecords,
+  getPatientHealthEvents,
+  getPatientDailyCheckIns,
+  getPatientAiSummary,
 
   getMedications,
   calculateSleepSummary,
