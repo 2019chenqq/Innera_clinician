@@ -152,6 +152,85 @@
           }
         );
 
+        const sessionSettings =
+          clinic.sessionSettings || {};
+
+        const sessionDefaults = {
+          morning: {
+            enabled: true,
+            start: "08:00",
+            end: "12:00"
+          },
+          afternoon: {
+            enabled: true,
+            start: "13:30",
+            end: "17:30"
+          },
+          evening: {
+            enabled: true,
+            start: "18:00",
+            end: "21:30"
+          }
+        };
+
+        const sessions = {
+          morning: {
+            enabledId: "clinicSessionMorningEnabled",
+            startId: "clinicSessionMorningStart",
+            endId: "clinicSessionMorningEnd"
+          },
+
+          afternoon: {
+            enabledId: "clinicSessionAfternoonEnabled",
+            startId: "clinicSessionAfternoonStart",
+            endId: "clinicSessionAfternoonEnd"
+          },
+
+          evening: {
+            enabledId: "clinicSessionEveningEnabled",
+            startId: "clinicSessionEveningStart",
+            endId: "clinicSessionEveningEnd"
+          }
+        };
+
+        Object.entries(sessions).forEach(
+          ([key, ids]) => {
+
+            const source =
+              sessionSettings[key] ||
+              sessionDefaults[key];
+
+            const enabledInput =
+              document.getElementById(
+                ids.enabledId
+              );
+
+            const startInput =
+              document.getElementById(
+                ids.startId
+              );
+
+            const endInput =
+              document.getElementById(
+                ids.endId
+              );
+
+            if (enabledInput) {
+              enabledInput.checked =
+                source.enabled !== false;
+            }
+
+            if (startInput) {
+              startInput.value =
+                source.start || "";
+            }
+
+            if (endInput) {
+              endInput.value =
+                source.end || "";
+            }
+          }
+        );
 
       // ========================================
       // 患者邀請狀態
@@ -298,6 +377,30 @@
       }
     });
 
+    [
+      "clinicSessionMorningEnabled",
+      "clinicSessionMorningStart",
+      "clinicSessionMorningEnd",
+
+      "clinicSessionAfternoonEnabled",
+      "clinicSessionAfternoonStart",
+      "clinicSessionAfternoonEnd",
+
+      "clinicSessionEveningEnabled",
+      "clinicSessionEveningStart",
+      "clinicSessionEveningEnd"
+    ].forEach((id) => {
+
+      const input =
+        document.getElementById(id);
+
+      if (!input) {
+        return;
+      }
+
+      input.disabled =
+        !editing;
+    });
 
     // clinicCode 永遠不可修改
     document
@@ -392,7 +495,59 @@
           .getElementById(
             "clinicSettingAddress"
           )
-          ?.value || ""
+          ?.value || "",
+          sessionSettings: {
+            morning: {
+              enabled:
+                document.getElementById(
+                  "clinicSessionMorningEnabled"
+                )?.checked === true,
+
+              start:
+                document.getElementById(
+                  "clinicSessionMorningStart"
+                )?.value || "",
+
+              end:
+                document.getElementById(
+                  "clinicSessionMorningEnd"
+                )?.value || ""
+            },
+
+            afternoon: {
+              enabled:
+                document.getElementById(
+                  "clinicSessionAfternoonEnabled"
+                )?.checked === true,
+
+              start:
+                document.getElementById(
+                  "clinicSessionAfternoonStart"
+                )?.value || "",
+
+              end:
+                document.getElementById(
+                  "clinicSessionAfternoonEnd"
+                )?.value || ""
+            },
+
+            evening: {
+              enabled:
+                document.getElementById(
+                  "clinicSessionEveningEnabled"
+                )?.checked === true,
+
+              start:
+                document.getElementById(
+                  "clinicSessionEveningStart"
+                )?.value || "",
+
+              end:
+                document.getElementById(
+                  "clinicSessionEveningEnd"
+                )?.value || ""
+            }
+          }
     };
 
 
@@ -406,7 +561,73 @@
   // 取消編輯
   // ========================================
   function cancelEditClinicSettings() {
+    const sessionSettings =
+      originalClinicSettings.sessionSettings;
 
+    if (sessionSettings) {
+
+      const sessions = {
+        morning: {
+          enabledId: "clinicSessionMorningEnabled",
+          startId: "clinicSessionMorningStart",
+          endId: "clinicSessionMorningEnd"
+        },
+
+        afternoon: {
+          enabledId: "clinicSessionAfternoonEnabled",
+          startId: "clinicSessionAfternoonStart",
+          endId: "clinicSessionAfternoonEnd"
+        },
+
+        evening: {
+          enabledId: "clinicSessionEveningEnabled",
+          startId: "clinicSessionEveningStart",
+          endId: "clinicSessionEveningEnd"
+        }
+      };
+
+      Object.entries(sessions).forEach(
+        ([key, ids]) => {
+
+          const source =
+            sessionSettings[key];
+
+          if (!source) {
+            return;
+          }
+
+          const enabledInput =
+            document.getElementById(
+              ids.enabledId
+            );
+
+          const startInput =
+            document.getElementById(
+              ids.startId
+            );
+
+          const endInput =
+            document.getElementById(
+              ids.endId
+            );
+
+          if (enabledInput) {
+            enabledInput.checked =
+              source.enabled === true;
+          }
+
+          if (startInput) {
+            startInput.value =
+              source.start || "";
+          }
+
+          if (endInput) {
+            endInput.value =
+              source.end || "";
+          }
+        }
+      );
+    }
     if (!originalClinicSettings) {
 
       setClinicSettingsEditMode(
@@ -523,6 +744,58 @@
         ?.value
         .trim() || "";
 
+        const sessionSettings = {
+          morning: {
+            enabled:
+              document.getElementById(
+                "clinicSessionMorningEnabled"
+              )?.checked === true,
+
+            start:
+              document.getElementById(
+                "clinicSessionMorningStart"
+              )?.value || "",
+
+            end:
+              document.getElementById(
+                "clinicSessionMorningEnd"
+              )?.value || ""
+          },
+
+          afternoon: {
+            enabled:
+              document.getElementById(
+                "clinicSessionAfternoonEnabled"
+              )?.checked === true,
+
+            start:
+              document.getElementById(
+                "clinicSessionAfternoonStart"
+              )?.value || "",
+
+            end:
+              document.getElementById(
+                "clinicSessionAfternoonEnd"
+              )?.value || ""
+          },
+
+          evening: {
+            enabled:
+              document.getElementById(
+                "clinicSessionEveningEnabled"
+              )?.checked === true,
+
+            start:
+              document.getElementById(
+                "clinicSessionEveningStart"
+              )?.value || "",
+
+            end:
+              document.getElementById(
+                "clinicSessionEveningEnd"
+              )?.value || ""
+          }
+        };
 
     if (!clinicName) {
 
@@ -567,6 +840,9 @@
           defaultDepartment,
 
           address,
+
+          sessionSettings,
+
 
           updatedAt:
             firebase

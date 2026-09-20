@@ -685,8 +685,6 @@
 
   <section class="clinic-staff-section">
 
-    <section class="clinic-staff-section">
-
   <div class="section-header">
     <div>
       <h2>院所成員</h2>
@@ -839,6 +837,95 @@
 
     </div>
 
+    <div class="clinic-session-settings">
+
+    <div class="clinic-session-heading">
+        <div>
+        <strong>診別時段</strong>
+        <p>設定此院所早診、下午診與晚診的預設時間。</p>
+        </div>
+    </div>
+
+    <div class="clinic-session-list">
+
+        <div class="clinic-session-row">
+        <label class="clinic-session-enabled">
+            <input
+            type="checkbox"
+            id="clinicSessionMorningEnabled"
+            disabled
+            >
+            <span>早診</span>
+        </label>
+
+        <div class="clinic-session-time">
+            <input
+            type="time"
+            id="clinicSessionMorningStart"
+            disabled
+            >
+            <span>～</span>
+            <input
+            type="time"
+            id="clinicSessionMorningEnd"
+            disabled
+            >
+        </div>
+        </div>
+
+        <div class="clinic-session-row">
+        <label class="clinic-session-enabled">
+            <input
+            type="checkbox"
+            id="clinicSessionAfternoonEnabled"
+            disabled
+            >
+            <span>下午診</span>
+        </label>
+
+        <div class="clinic-session-time">
+            <input
+            type="time"
+            id="clinicSessionAfternoonStart"
+            disabled
+            >
+            <span>～</span>
+            <input
+            type="time"
+            id="clinicSessionAfternoonEnd"
+            disabled
+            >
+        </div>
+        </div>
+
+    <div class="clinic-session-row">
+      <label class="clinic-session-enabled">
+        <input
+          type="checkbox"
+          id="clinicSessionEveningEnabled"
+          disabled
+        >
+        <span>晚診</span>
+      </label>
+
+      <div class="clinic-session-time">
+        <input
+          type="time"
+          id="clinicSessionEveningStart"
+          disabled
+        >
+        <span>～</span>
+        <input
+          type="time"
+          id="clinicSessionEveningEnd"
+          disabled
+        >
+      </div>
+    </div>
+
+  </div>
+
+</div>
 
     <div class="clinic-setting-toggle-row">
 

@@ -371,6 +371,10 @@
 }
 
 
+.clinic-session-settings {
+  margin-bottom: 20px;
+}
+
 .clinic-setting-toggle-row {
   display: flex;
   align-items: center;
