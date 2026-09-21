@@ -243,7 +243,7 @@
 
 
       const inviteEnabled =
-        clinic.allowPatientInvite === true;
+        (clinic.allowPatientInvite ?? true) === true;
 
 
       if (inviteStatus) {

@@ -141,6 +141,13 @@ function updateCounts() {
     (patient) => patient.linked && !patient.viewed
   ).length;
 
+  const linkedRatio = document.getElementById("linkedPatientRatio");
+  if (linkedRatio) {
+    linkedRatio.textContent = total
+      ? `${Math.round(linked / total * 100)}% 已連結心域`
+      : "尚無患者";
+  }
+
   const allCount = document.getElementById("filterAllCount");
   const linkedCount = document.getElementById("filterLinkedCount");
   const attentionCount = document.getElementById("filterAttentionCount");
@@ -213,7 +220,82 @@ function setFilter(filter) {
   });
 }
 
+function initClinicSessionDate() {
+  const element = document.getElementById("clinicSessionDate");
+  if (!element) return;
+
+  let clinicId = null;
+  let unsubscribe = null;
+  let sessionSettings = null;
+  let sessionStatus = "等待院所資訊";
+  const clock = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Taipei",
+    year: "numeric", month: "numeric", day: "numeric",
+    hour: "2-digit", minute: "2-digit", hourCycle: "h23"
+  });
+
+  function toMinutes(value) {
+    if (typeof value !== "string" || !/^([01]\d|2[0-3]):[0-5]\d$/.test(value)) return null;
+    const [hours, minutes] = value.split(":").map(Number);
+    return hours * 60 + minutes;
+  }
+
+  function refresh() {
+    const activeClinicId = window.INNERA_CURRENT_STAFF?.clinicId ||
+      window.INNERA_ACTIVE_CLINIC_ID || null;
+    if (activeClinicId !== clinicId) {
+      if (unsubscribe) unsubscribe();
+      unsubscribe = null;
+      clinicId = activeClinicId;
+      sessionSettings = null;
+      sessionStatus = clinicId ? "載入門診時間中…" : "等待院所資訊";
+      if (clinicId) {
+        const requestedClinicId = clinicId;
+        unsubscribe = firebase.firestore().collection("clinics").doc(clinicId).onSnapshot(
+          (snapshot) => {
+            if (clinicId !== requestedClinicId) return;
+            sessionSettings = snapshot.exists ? snapshot.data().sessionSettings : null;
+            sessionStatus = "尚未設定門診時間";
+            render();
+          },
+          (error) => {
+            if (clinicId !== requestedClinicId) return;
+            sessionSettings = null;
+            sessionStatus = "門診時間讀取失敗";
+            console.warn("[Innera] 門診時間讀取失敗：", error);
+            render();
+          }
+        );
+      }
+    }
+    render();
+  }
+
+  function render() {
+    const parts = Object.fromEntries(clock.formatToParts(new Date()).map(({ type, value }) => [type, value]));
+    const now = Number(parts.hour) * 60 + Number(parts.minute);
+    const sessions = [["morning", "早診"], ["afternoon", "下午診"], ["evening", "晚診"]]
+      .map(([key, label]) => ({ ...sessionSettings?.[key], label }))
+      .filter((session) => session.enabled !== false &&
+        toMinutes(session.start) !== null && toMinutes(session.end) !== null &&
+        session.start !== session.end);
+    const current = sessions.find((session) => {
+      const start = toMinutes(session.start);
+      const end = toMinutes(session.end);
+      return start < end ? now >= start && now < end : now >= start || now < end;
+    });
+    const label = current
+      ? `${current.label} ${current.start}–${current.end}`
+      : sessions.length ? "非門診時段" : sessionStatus;
+    element.textContent = `${parts.year} 年 ${parts.month} 月 ${parts.day} 日・${label}`;
+  }
+
+  refresh();
+  setInterval(refresh, 1000);
+}
+
 function initDashboard() {
+  initClinicSessionDate();
   renderPatients();
   updateCounts();
 
