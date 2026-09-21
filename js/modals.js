@@ -1,6 +1,17 @@
 
 
 let activeInvitePatientId = null;
+function isDemoClinic() {
+  const staff = window.INNERA_CURRENT_STAFF;
+
+  if (!staff) return false;
+
+  return (
+    staff.email === "demo@innera.tw" ||
+    staff.clinicName === "心域 Demo 診所"
+  );
+}
+
 function openAddPatientModal() {
   document.getElementById("addPatientModal")?.classList.add("show");
 }
@@ -19,7 +30,16 @@ function initModals() {
   const inviteModal = document.getElementById("inviteModal");
 
   document.getElementById("addPatientButton")
-    ?.addEventListener("click", openAddPatientModal);
+  ?.addEventListener("click", () => {
+    if (isDemoClinic()) {
+      showToast(
+        "展示環境不開放建立與連結真實個案；正式院所版本可新增個案並由患者透過心域 App 授權連結。"
+      );
+      return;
+    }
+
+    openAddPatientModal();
+  });
 
   document.getElementById("closeAddPatientModal")
     ?.addEventListener("click", closeAddModal);
@@ -132,7 +152,15 @@ function initModals() {
   document.addEventListener("click", (event) => {
     const button = event.target.closest(".connect-button");
     if (!button) return;
+    if (isDemoClinic()) {
+      event.preventDefault();
 
+      showToast(
+        "展示環境不開放患者連結；正式院所版本可產生邀請碼，由患者於心域 App 完成授權。"
+      );
+
+      return;
+    }
     event.preventDefault();
 
     const row = button.closest(".patient-row");
