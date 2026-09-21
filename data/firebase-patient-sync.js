@@ -1,13 +1,14 @@
 // firebase-patient-sync.js
 // MVP：即時監聽 Firestore inneraPatients，讓患者新增／連結狀態變更後
 // 醫療端不需重新整理即可更新。
-// 目前保留既有 Demo patients，Firestore 患者會 merge 進同一份陣列。
+// 每次快照以目前院所的 Firestore 患者取代陣列內容。
 
 (function () {
   let unsubscribePatients = null;
+  let clinicRetryTimer = null;
 
   function getClinicId() {
-    return window.INNERA_DEMO_CLINIC_ID || "innera-demo-clinic";
+    return window.INNERA_CURRENT_STAFF?.clinicId || window.INNERA_ACTIVE_CLINIC_ID;
   }
 
   function safeString(value, fallback = "") {
@@ -97,79 +98,6 @@
     };
   }
 
-  function mergePatientIntoUi(incoming) {
-    const list = getPatientList();
-
-    if (!list) {
-      throw new Error("找不到前端 patients 陣列。");
-    }
-
-    const index = list.findIndex(
-      (item) => item.id === incoming.id
-    );
-
-    if (index >= 0) {
-      const existing = list[index];
-
-      list[index] = {
-        ...incoming,
-        ...existing,
-
-        // 這些欄位必須以 Firestore 為準。
-        id: incoming.id,
-        fullName: incoming.fullName,
-        queueNumber: incoming.queueNumber,
-        registrationTime: incoming.registrationTime,
-        visitType: incoming.visitType,
-        linked: incoming.linked,
-        firebaseUid: incoming.firebaseUid,
-        clinicId: incoming.clinicId,
-        source: "firestore"
-      };
-
-      if (incoming.linked) {
-
-      if (!existing.linked) {
-        list[index].status = null;
-        list[index].statusType = "stable";
-
-        list[index].mood = "—";
-        list[index].moodSub = "尚未串接";
-
-        list[index].sleep = "—";
-        list[index].sleepSub = "讀取中";
-
-        list[index].changes = [];
-      }
-
-      // 不論是否剛連結，都以 Firestore 最新時間為準
-      list[index].updatedAt = incoming.updatedAt;
-      list[index].updated = incoming.updated;
-
-    } else {
-
-      // 尚未連結時，不應顯示心域資料
-      list[index].status = null;
-      list[index].statusType = null;
-
-      list[index].mood = null;
-      list[index].moodSub = null;
-
-      list[index].sleep = null;
-      list[index].sleepSub = null;
-
-      list[index].changes = [];
-
-      list[index].updatedAt = null;
-      list[index].updated = "—";
-    }
-
-      return;
-    }
-
-    list.push(incoming);
-  }
-
   function renderAfterSync() {
     if (typeof renderPatients === "function") {
       renderPatients();
@@ -185,11 +113,15 @@
   }
 
   function applySnapshot(snapshot) {
+    const list = getPatientList();
+    if (!list) throw new Error("找不到前端 patients 陣列。");
+
+    list.length = 0;
     snapshot.docs.forEach((doc) => {
       const incoming =
         firestorePatientToUi(doc.data(), doc.id);
 
-      mergePatientIntoUi(incoming);
+      list.push(incoming);
     });
 
     renderAfterSync();
@@ -233,8 +165,14 @@
       unsubscribePatients = null;
     }
 
-    const db = firebase.firestore();
+    clearTimeout(clinicRetryTimer);
     const clinicId = getClinicId();
+    if (!clinicId) {
+      console.warn("[Innera] clinicId 尚未就緒，略過患者即時同步並等待院所資訊。");
+      clinicRetryTimer = setTimeout(startRealtimePatientSync, 1000);
+      return;
+    }
+    const db = firebase.firestore();
 
     unsubscribePatients = db
       .collection("inneraPatients")
@@ -264,6 +202,7 @@
   }
 
   function stopRealtimePatientSync() {
+    clearTimeout(clinicRetryTimer);
     if (unsubscribePatients) {
       unsubscribePatients();
       unsubscribePatients = null;

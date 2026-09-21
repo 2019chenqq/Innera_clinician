@@ -1,5 +1,6 @@
 (function () {
   let syncing = false;
+  let syncPending = false;
 
   function patientList() {
     if (Array.isArray(window.patients)) return window.patients;
@@ -80,41 +81,57 @@ function isImportantHealthEvent(event) {
   }
 
   async function syncHealthData() {
-    if (syncing || !window.InneraFirebase?.currentUser) return;
-    const patientId = window.INNERA_REAL_SLEEP_PATIENT_ID || "P000001";
-    const patient = patientList().find((item) => item.id === patientId);
-    if (!patient) return;
-
+    if (!window.InneraFirebase?.currentUser) return;
+    if (syncing) {
+      syncPending = true;
+      return;
+    }
     syncing = true;
-    const previousSummary = patient.aiSummary;
     try {
-      const clinicId = patient.clinicId || window.INNERA_ACTIVE_CLINIC_ID ||
-        window.INNERA_DEMO_CLINIC_ID || "innera-demo-clinic";
-      const [
-        healthEvents,
-        dailyCheckIns,
-        aiSummary
-      ] = await Promise.all([
-        InneraFirebase.getPatientHealthEvents({
-          patientId,
-          days: 30,
-          clinicId
-        }),
+      for (const patient of patientList().filter((item) => item.linked === true && item.firebaseUid)) {
+        const patientId = patient.id;
+        const previousSummary = patient.aiSummary;
+        try {
+          const clinicId = patient.clinicId;
+          if (!clinicId) {
+            console.warn(`[Innera] 患者 ${patientId} 缺少 clinicId，略過健康同步。`);
+            continue;
+          }
+        const [
+          healthEvents,
+          dailyCheckIns,
+          aiSummary,
+          medications
+        ] = await Promise.all([
+          InneraFirebase.getPatientHealthEvents({
+            patientId,
+            days: 30,
+            clinicId
+          }),
 
-        InneraFirebase.getPatientDailyCheckIns({
-          patientId,
-          days: 30,
-          clinicId
-        }),
+          InneraFirebase.getPatientDailyCheckIns({
+            patientId,
+            days: 30,
+            clinicId
+          }),
 
-        InneraFirebase.getPatientAiSummary({
-          patientId,
-          clinicId
-        }).catch((error) => {
-          console.warn("[Innera] AI Summary 讀取失敗：", error);
-          return null;
-        })
-      ]);
+          InneraFirebase.getPatientAiSummary({
+            patientId,
+            clinicId
+          }).catch((error) => {
+            console.warn("[Innera] AI Summary 讀取失敗：", error);
+            return null;
+          }),
+
+          InneraFirebase.getPatientMedications({
+            patientId,
+            clinicId
+          }).catch((error) => {
+            console.warn("[Innera] 用藥資料讀取失敗：", error);
+            return [];
+          })
+        ]);
+      if (!patientList().includes(patient)) continue;
 
       const formatItems = (items = []) => items.map((item) =>
         `${item.name || "—"} ${item.intensity ?? "—"}/5`
@@ -213,6 +230,10 @@ function isImportantHealthEvent(event) {
       }
       // Do not overwrite a newly generated summary with an older in-flight read.
       if (patient.aiSummary === previousSummary) patient.aiSummary = aiSummary || null;
+      patient.medications =
+        Array.isArray(medications)
+          ? medications
+          : [];
       updateRecentChanges(patient);
       const moodValues = dailyCheckIns
         .map((item) => Number(item.overallMood))
@@ -234,10 +255,16 @@ function isImportantHealthEvent(event) {
         renderPatientDetail(patient);
       }
       console.info(`[Innera] 真實健康資料同步完成：${healthEvents.length} 筆快速紀錄、${dailyCheckIns.length} 筆 Check-in。`);
-    } catch (error) {
-      console.error("[Innera] 真實健康資料同步失敗：", error);
+        } catch (error) {
+          console.error(`[Innera] 患者 ${patientId} 真實健康資料同步失敗：`, error);
+        }
+      }
     } finally {
       syncing = false;
+      if (syncPending) {
+        syncPending = false;
+        syncHealthData();
+      }
     }
   }
 
@@ -250,8 +277,7 @@ function isImportantHealthEvent(event) {
     document.addEventListener("innera-ai-summary-generated", (event) => {
       const { patientId, clinicId, summary } = event.detail;
       const patient = patientList().find((item) => item.id === patientId);
-      const activeClinicId = patient?.clinicId || window.INNERA_ACTIVE_CLINIC_ID ||
-        window.INNERA_DEMO_CLINIC_ID || "innera-demo-clinic";
+      const activeClinicId = patient?.clinicId;
       if (!patient || activeClinicId !== clinicId) return;
       patient.aiSummary = summary;
       updateRecentChanges(patient);

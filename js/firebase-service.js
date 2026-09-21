@@ -109,8 +109,7 @@
     };
   }
 
-  async function getPatientRecentSleepRecords({
-  patientId,
+  async function getRecentSleepRecords({
   days = 30,
   clinicId
 } = {}) {
@@ -120,39 +119,17 @@
     throw new Error("尚未登入 Firebase。");
   }
 
-  if (!patientId) {
-    throw new Error("patientId 不可為空");
-  }
-
   const targetClinicId =
-  clinicId ||
-  window.INNERA_ACTIVE_CLINIC_ID ||
-  window.INNERA_DEMO_CLINIC_ID ||
-  "innera-demo-clinic";
+    clinicId ||
+    window.INNERA_ACTIVE_CLINIC_ID;
 
-  // 先用 P000001 找患者
-  const patientSnap = await getDb()
-    .collection("inneraPatients")
-    .doc(patientId)
-    .get();
-
-  if (!patientSnap.exists) {
-    throw new Error(`找不到患者：${patientId}`);
+  if (!targetClinicId) {
+    throw new Error("缺少 clinicId");
   }
 
-  const patient = patientSnap.data();
-
-  if (!patient.linked || !patient.firebaseUid) {
-    throw new Error("此患者尚未連結心域");
-  }
-
-  // 取得真正 App Firebase UID
-  const patientUid = patient.firebaseUid;
-
-  // 再用患者 UID 讀分享資料
   const snapshot = await getDb()
     .collection("clinicalShares")
-    .doc(patientUid)
+    .doc(user.uid)
     .collection("clinics")
     .doc(targetClinicId)
     .collection("sleepRecords")
@@ -160,10 +137,65 @@
 
   const records = snapshot.docs
     .map(normalizeSleepDoc)
-    .sort((a, b) => a.id.localeCompare(b.id));
+    .sort((a, b) =>
+      a.id.localeCompare(b.id)
+    );
 
   return records.slice(-days);
 }
+
+  async function getPatientRecentSleepRecords({
+    patientId,
+    days = 30,
+    clinicId
+  } = {}) {
+    if (!getAuth().currentUser) {
+      throw new Error("尚未登入 Firebase。");
+    }
+
+    if (!patientId) {
+      throw new Error("patientId 不可為空");
+    }
+
+    const patientSnap = await getDb()
+      .collection("inneraPatients")
+      .doc(patientId)
+      .get();
+
+    if (!patientSnap.exists) {
+      throw new Error(`找不到患者：${patientId}`);
+    }
+
+    const patient = patientSnap.data();
+
+    if (!patient.linked || !patient.firebaseUid) {
+      throw new Error("此患者尚未連結心域");
+    }
+
+    const targetClinicId =
+      clinicId ||
+      window.INNERA_ACTIVE_CLINIC_ID;
+
+    if (!targetClinicId) {
+      throw new Error("缺少 clinicId");
+    }
+
+    const snapshot = await getDb()
+      .collection("clinicalShares")
+      .doc(patient.firebaseUid)
+      .collection("clinics")
+      .doc(targetClinicId)
+      .collection("sleepRecords")
+      .get();
+
+    const records = snapshot.docs
+      .map(normalizeSleepDoc)
+      .sort((a, b) =>
+        a.id.localeCompare(b.id)
+      );
+
+    return records.slice(-days);
+  }
 
   async function getPatientHealthEvents({ patientId, days = 30, clinicId } = {}) {
     if (!getAuth().currentUser) throw new Error("尚未登入 Firebase。");
@@ -172,8 +204,13 @@
     if (!patientSnap.exists) throw new Error(`找不到患者：${patientId}`);
     const patient = patientSnap.data();
     if (!patient.linked || !patient.firebaseUid) throw new Error("此患者尚未連結心域");
-    const targetClinicId = clinicId || window.INNERA_ACTIVE_CLINIC_ID ||
-      window.INNERA_DEMO_CLINIC_ID || "innera-demo-clinic";
+    const targetClinicId =
+      clinicId ||
+      window.INNERA_ACTIVE_CLINIC_ID;
+
+    if (!targetClinicId) {
+      throw new Error("缺少 clinicId");
+    }
     const since = new Date();
     since.setHours(0, 0, 0, 0);
     since.setDate(since.getDate() - Math.max(0, days - 1));
@@ -204,8 +241,13 @@
     if (!patientSnap.exists) throw new Error(`找不到患者：${patientId}`);
     const patient = patientSnap.data();
     if (!patient.linked || !patient.firebaseUid) throw new Error("此患者尚未連結心域");
-    const targetClinicId = clinicId || window.INNERA_ACTIVE_CLINIC_ID ||
-      window.INNERA_DEMO_CLINIC_ID || "innera-demo-clinic";
+    const targetClinicId =
+      clinicId ||
+      window.INNERA_ACTIVE_CLINIC_ID;
+
+    if (!targetClinicId) {
+      throw new Error("缺少 clinicId");
+    }
     const since = new Date();
     since.setHours(0, 0, 0, 0);
     since.setDate(since.getDate() - Math.max(0, days - 1));
@@ -256,9 +298,11 @@ async function getPatientAiSummary({
 
   const targetClinicId =
     clinicId ||
-    window.INNERA_ACTIVE_CLINIC_ID ||
-    window.INNERA_DEMO_CLINIC_ID ||
-    "innera-demo-clinic";
+    window.INNERA_ACTIVE_CLINIC_ID;
+
+    if (!targetClinicId) {
+      throw new Error("缺少 clinicId");
+    }
 
   const summarySnap = await getDb()
     .collection("clinicalShares")
@@ -276,50 +320,53 @@ async function getPatientAiSummary({
   return summarySnap.data();
 }
 
-  async function getRecentSleepRecords({ days = 30, clinicId } = {}) {
-    const user = getAuth().currentUser;
-    if (!user) {
-      throw new Error("尚未登入 Firebase，請先執行 Google 測試登入。");
+  async function getPatientMedications({
+    patientId,
+    clinicId
+  } = {}) {
+    if (!getAuth().currentUser) {
+      throw new Error("尚未登入 Firebase。");
+    }
+
+    if (!patientId) {
+      throw new Error("patientId 不可為空");
+    }
+
+    const patientSnap = await getDb()
+      .collection("inneraPatients")
+      .doc(patientId)
+      .get();
+
+    if (!patientSnap.exists) {
+      throw new Error(`找不到患者：${patientId}`);
+    }
+
+    const patient = patientSnap.data();
+
+    if (!patient.linked || !patient.firebaseUid) {
+      throw new Error("此患者尚未連結心域");
     }
 
     const targetClinicId =
-  clinicId ||
-  window.INNERA_ACTIVE_CLINIC_ID ||
-  window.INNERA_DEMO_CLINIC_ID ||
-  "innera-demo-clinic";
+      clinicId ||
+      window.INNERA_ACTIVE_CLINIC_ID;
 
-    const snapshot = await getDb()
-  .collection("clinicalShares")
-  .doc(user.uid)
-  .collection("clinics")
-  .doc(targetClinicId)
-  .collection("sleepRecords")
-  .get();
-
-const records = snapshot.docs
-  .map(normalizeSleepDoc)
-  .sort((a, b) => a.id.localeCompare(b.id));
-
-return records.slice(-days);
-  }
-
-  async function getMedications({ clinicId } = {}) {
-    const user = getAuth().currentUser;
-    if (!user) {
-      throw new Error("尚未登入 Firebase，無法讀取用藥資料。");
+    if (!targetClinicId) {
+      throw new Error("缺少 clinicId");
     }
 
-    const targetClinicId =
-      clinicId || window.INNERA_DEMO_CLINIC_ID || "innera-demo-clinic";
     const snapshot = await getDb()
       .collection("clinicalShares")
-      .doc(user.uid)
+      .doc(patient.firebaseUid)
       .collection("clinics")
       .doc(targetClinicId)
       .collection("medications")
       .get();
 
-    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data()
+    }));
   }
 
   function calculateSleepSummary(records) {
@@ -365,23 +412,23 @@ return records.slice(-days);
     };
   }
 
-window.InneraFirebase = {
-  init,
-  signInWithGoogle,
-  signOut,
+  window.InneraFirebase = {
+    init,
+    signInWithGoogle,
+    signOut,
 
-  getRecentSleepRecords,
-  getPatientRecentSleepRecords,
-  getPatientHealthEvents,
-  getPatientDailyCheckIns,
-  getPatientAiSummary,
+    getRecentSleepRecords,
+    getPatientRecentSleepRecords,
+    getPatientHealthEvents,
+    getPatientDailyCheckIns,
+    getPatientAiSummary,
+    getPatientMedications,
 
-  getMedications,
-  calculateSleepSummary,
-  loadMyRecentSleep,
+    calculateSleepSummary,
+    loadMyRecentSleep,
 
-  get currentUser() {
-    return getAuth().currentUser;
-  }
-};
+    get currentUser() {
+      return getAuth().currentUser;
+    }
+  };
 })();

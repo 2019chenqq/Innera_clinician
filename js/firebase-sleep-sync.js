@@ -1,12 +1,13 @@
 // firebase-sleep-sync.js
 // 正式 MVP 版：不顯示測試面板。
 // 使用者已登入 Firebase 時，自動讀取 clinicalShares 的近 7 筆睡眠資料，
-// 並套用到 P001 的今日門診／個案近況／完整個案資料。
+// 並套用到已連結患者的今日門診／個案近況／完整個案資料。
 
 (function () {
   let syncInProgress = false;
+  let syncPending = false;
   let lastSyncedUid = null;
-async function getPatientSleepRecords(patientId, days = 30) {
+async function getPatientSleepRecords(patientId, clinicId, days = 30) {
   if (!patientId) {
     throw new Error("patientId 不可為空。");
   }
@@ -14,6 +15,8 @@ async function getPatientSleepRecords(patientId, days = 30) {
   if (typeof firebase === "undefined") {
     throw new Error("Firebase SDK 尚未載入。");
   }
+
+  if (!clinicId) throw new Error(`患者 ${patientId} 缺少 clinicId。`);
 
   const db = firebase.firestore();
 
@@ -33,11 +36,10 @@ async function getPatientSleepRecords(patientId, days = 30) {
     throw new Error(`患者 ${patientId} 尚未完成心域連結。`);
   }
 
+  if (patientData.clinicId !== clinicId) {
+    throw new Error(`患者 ${patientId} 不屬於目前院所。`);
+  }
   const patientUid = patientData.firebaseUid;
-
-  const clinicId =
-    window.INNERA_DEMO_CLINIC_ID ||
-    "innera-demo-clinic";
 
 console.log("[Sleep Debug] patientId =", patientId);
 console.log("[Sleep Debug] firebaseUid =", patientUid);
@@ -62,7 +64,10 @@ console.log("[Sleep Debug] clinicId =", clinicId);
     .sort((a, b) => a.id.localeCompare(b.id));
 }
   async function syncRealSleepData() {
-    if (syncInProgress) return;
+    if (syncInProgress) {
+      syncPending = true;
+      return;
+    }
 
     const inneraFirebase = window.InneraFirebase;
     if (!inneraFirebase) {
@@ -79,32 +84,17 @@ console.log("[Sleep Debug] clinicId =", clinicId);
     syncInProgress = true;
 
     try {
-      const patientId =
-  window.INNERA_REAL_SLEEP_PATIENT_ID ||
-  "P000001";
-
-const records =
-  await getPatientSleepRecords(patientId, 30);
-
-const summary =
-  inneraFirebase.calculateSleepSummary(records);
-
-const data = {
-  records,
-  summary
-};
-
-        const patient =
-        Array.isArray(window.patients)
-          ? window.patients.find((item) => item.id === patientId)
-          : (typeof patients !== "undefined"
-              ? patients.find((item) => item.id === patientId)
-              : null);
-
-      if (!patient) {
-        console.warn(`[Innera] 找不到要套用真實睡眠資料的個案：${patientId}`);
-        return;
-      }
+      const list = Array.isArray(window.patients)
+        ? window.patients
+        : (typeof patients !== "undefined" ? patients : []);
+      for (const patient of list.filter((item) => item.linked === true && item.firebaseUid)) {
+        try {
+          const patientId = patient.id;
+          const clinicId = patient.clinicId || window.INNERA_ACTIVE_CLINIC_ID;
+          const records = await getPatientSleepRecords(patientId, clinicId, 30);
+          if (!list.includes(patient)) continue;
+          const summary = inneraFirebase.calculateSleepSummary(records);
+          const data = { records, summary };
 
       if (typeof applyRealSleepDataToPatient !== "function") {
         console.warn("[Innera] applyRealSleepDataToPatient 尚未載入。");
@@ -148,10 +138,18 @@ if (
         `[Innera] 真實睡眠同步完成：${data.summary?.recordCount ?? 0} 筆，` +
         `平均 ${data.summary?.avgDurationHours ?? "—"} 小時`
       );
+        } catch (error) {
+          console.error(`[Innera] 患者 ${patient.id} 真實睡眠同步失敗：`, error);
+        }
+      }
     } catch (error) {
       console.error("[Innera] 真實睡眠同步失敗：", error);
     } finally {
       syncInProgress = false;
+      if (syncPending) {
+        syncPending = false;
+        syncRealSleepData();
+      }
     }
   }
 
@@ -186,5 +184,6 @@ if (
     refresh: syncRealSleepData
   };
 
+  document.addEventListener("innera-patients-synced", syncRealSleepData);
   document.addEventListener("DOMContentLoaded", initSleepSync);
 })();

@@ -85,18 +85,26 @@ function getClinicalDemoData(patient) {
 }
 
 function getClinicalViewModel(patient) {
-  const demo = getClinicalDemoData(patient);
-
   return {
-    domains: patient?.aiSummary?.domains || patient?.clinicalDomains || demo.domains,
-    pattern: patient?.clinicalPattern || patient?.pattern || (patient?.aiSummary ? {} : demo.pattern),
-    symptoms: Array.isArray(patient?.symptoms) && patient.symptoms.length
-      ? patient.symptoms
-      : [],
+    domains:
+      patient?.aiSummary?.domains ||
+      patient?.clinicalDomains ||
+      {},
+
+    pattern:
+      patient?.clinicalPattern ||
+      patient?.pattern ||
+      {},
+
+    symptoms:
+      Array.isArray(patient?.symptoms)
+        ? patient.symptoms
+        : [],
+
     medicationChanges:
-  Array.isArray(patient?.medicationChanges)
-    ? patient.medicationChanges
-    : []
+      Array.isArray(patient?.medicationChanges)
+        ? patient.medicationChanges
+        : []
   };
 }
 
@@ -879,22 +887,96 @@ function renderPatientDetail(patient) {
   const visibleMedications = medicationListExpanded
     ? medications
     : medications.slice(0, 4);
-  const medicationList = document.getElementById("detailMedicationList");
-  medicationList.innerHTML = visibleMedications.map((med) => {
-    const genericName = String(med?.genericName ?? "").trim();
-    const name = String(med?.name ?? "").trim();
-    const primaryName = genericName || name || "未命名藥物";
-    const secondaryName = genericName && name && name !== genericName
-      ? `<span class="detail-medication-name">${escapeMedicationText(name)}</span>`
-      : "";
-    return `
-      <div class="detail-medication-item">
-        <strong class="detail-medication-generic">${escapeMedicationText(primaryName)}</strong>
-        ${secondaryName}
-        <span class="detail-medication-detail">${escapeMedicationText(med?.detail || "—")}</span>
-      </div>
-    `;
-  }).join("") || `<p class="empty-detail">目前沒有用藥資料</p>`;
+  const medicationList =
+    document.getElementById("detailMedicationList");
+
+    medicationList.innerHTML =
+    visibleMedications.map((med) => {
+
+        const name =
+        String(med?.name ?? "").trim();
+
+        const nameEn =
+        String(
+            med?.nameEn ??
+            med?.genericName ??
+            ""
+        ).trim();
+
+        const primaryName =
+        nameEn ||
+        name ||
+        "未命名藥物";
+
+        const secondaryName =
+        name &&
+        name !== primaryName
+            ? `<span class="detail-medication-name">${escapeMedicationText(name)}</span>`
+            : "";
+
+        let doseText = "";
+
+        if (
+        med?.dose !== null &&
+        med?.dose !== undefined &&
+        String(med.dose).trim()
+        ) {
+        const rawDose =
+            String(med.dose).trim();
+
+        const unit =
+            String(med?.unit ?? "").trim();
+
+        const doseAlreadyHasUnit =
+            /[a-zA-Zµμ%]/.test(rawDose);
+
+        doseText =
+            doseAlreadyHasUnit || !unit
+            ? rawDose
+            : `${rawDose} ${unit}`;
+        }
+
+        if (
+        !doseText &&
+        med?.dosePerUnit !== null &&
+        med?.dosePerUnit !== undefined
+        ) {
+        const unit =
+            String(med?.unit ?? "").trim();
+
+        doseText =
+            `${med.dosePerUnit}${unit ? ` ${unit}` : ""}`;
+        }
+
+        const timesText =
+        Array.isArray(med?.times)
+            ? med.times
+                .map((item) => String(item).trim())
+                .filter(Boolean)
+                .join("、")
+            : String(med?.times ?? "").trim();
+
+        const detail =
+        [doseText, timesText]
+            .filter(Boolean)
+            .join("｜") ||
+        "—";
+
+        return `
+        <div class="detail-medication-item">
+            <strong class="detail-medication-generic">
+            ${escapeMedicationText(primaryName)}
+            </strong>
+
+            ${secondaryName}
+
+            <span class="detail-medication-detail">
+            ${escapeMedicationText(detail)}
+            </span>
+        </div>
+        `;
+    }).join("") ||
+    `<p class="empty-detail">目前沒有用藥資料</p>`;
 
   if (medications.length > 4) {
     const toggle = document.createElement("button");
