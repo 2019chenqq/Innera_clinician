@@ -418,6 +418,28 @@
       );
     }
 
+    const demoButton =
+        document.getElementById("fillDemoLogin");
+
+      if (demoButton) {
+        demoButton.addEventListener("click", () => {
+          const emailInput =
+            document.getElementById("loginEmail");
+
+          const passwordInput =
+            document.getElementById("loginPassword");
+
+          if (emailInput) {
+            emailInput.value = "demo@innera.tw";
+          }
+
+          if (passwordInput) {
+            passwordInput.value = "555555";
+          }
+
+          setLoginError("");
+        });
+      }
 
     const logoutButton =
       document.getElementById(
