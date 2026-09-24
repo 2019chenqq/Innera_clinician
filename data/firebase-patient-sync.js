@@ -7,7 +7,15 @@
   let unsubscribePatients = null;
   let clinicRetryTimer = null;
 
+  function isDemoClinic() {
+    const staff = window.INNERA_CURRENT_STAFF;
+    return staff?.email === "demo@innera.tw" ||
+      window.InneraFirebase?.currentUser?.email === "demo@innera.tw" ||
+      staff?.clinicName === "心域 Demo 診所";
+  }
+
   function getClinicId() {
+    if (isDemoClinic()) return "lyuA5LbAHkgvgjn9y6oF";
     return window.INNERA_CURRENT_STAFF?.clinicId || window.INNERA_ACTIVE_CLINIC_ID;
   }
 

@@ -30,7 +30,7 @@
     };
   }
 
-  async function getPatientMedications(patientId) {
+  async function getPatientMedications(patientId, targetClinicId) {
     if (!patientId) {
       throw new Error("patientId 不可為空。");
     }
@@ -59,8 +59,12 @@
 
     const patientUid = patientData.firebaseUid;
 
+    if (targetClinicId && patientData.clinicId !== targetClinicId) {
+      throw new Error("患者不屬於指定 Demo 院所。");
+    }
+
     const clinicId =
-      window.INNERA_DEMO_CLINIC_ID ||
+      targetClinicId || window.INNERA_DEMO_CLINIC_ID ||
       "innera-demo-clinic";
 
     // 2. 用患者 App UID 讀取分享給該院所的用藥
@@ -78,6 +82,14 @@
     }));
   }
 
+  function isDemoMedicationClinic() {
+    const staff = window.INNERA_CURRENT_STAFF;
+    return staff?.email === "demo@innera.tw" ||
+      window.InneraFirebase?.currentUser?.email === "demo@innera.tw" ||
+      staff?.clinicName === "心域 Demo 診所" ||
+      staff?.clinicId === "lyuA5LbAHkgvgjn9y6oF";
+  }
+
   async function syncMedications() {
     try {
       const service = window.InneraFirebase;
@@ -90,6 +102,25 @@
 
       if (!user) {
         console.info("[Innera] Firebase 尚未登入，等待登入後再同步用藥。");
+        return;
+      }
+
+      if (isDemoMedicationClinic()) {
+        const list = window.patients || [];
+        for (const patient of list.filter((item) => item.linked === true &&
+          item.firebaseUid && item.clinicId === "lyuA5LbAHkgvgjn9y6oF")) {
+          try {
+            const medications = await getPatientMedications(patient.id, patient.clinicId);
+            if (!list.includes(patient)) continue;
+            patient.medications = medications.map(toPatientMedication);
+            const detailPage = document.getElementById("patientDetailPage");
+            if (typeof state !== "undefined" && state.activePatientId === patient.id &&
+                detailPage && !detailPage.classList.contains("hidden") &&
+                typeof renderPatientDetail === "function") renderPatientDetail(patient);
+          } catch (error) {
+            console.error(`[Innera] Demo ${patient.id} 用藥載入失敗：`, error);
+          }
+        }
         return;
       }
 
@@ -161,6 +192,10 @@
       );
     }
   }
+
+  document.addEventListener("innera-patients-synced", () => {
+    if (isDemoMedicationClinic()) syncMedications();
+  });
 
   window.InneraMedicationSync = {
     refresh: syncMedications
