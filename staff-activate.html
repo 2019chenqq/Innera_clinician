@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>啟用院所帳號｜心域 Innera</title>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Noto Sans TC", sans-serif;
+      background: #f5f8f8;
+      color: #263737;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .activation-card {
+      width: min(100%, 520px);
+      background: #ffffff;
+      border: 1px solid #dde8e7;
+      border-radius: 24px;
+      padding: 36px;
+      box-shadow: 0 18px 50px rgba(37, 74, 72, 0.08);
+    }
+
+    .brand {
+      margin-bottom: 28px;
+    }
+
+    .brand-mark {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: #376f6c;
+      color: white;
+      display: grid;
+      place-items: center;
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .eyebrow {
+      margin: 0 0 6px;
+      color: #6e8886;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 26px;
+    }
+
+    .status-message {
+      margin: 28px 0 0;
+      padding: 18px;
+      background: #f2f7f6;
+      border-radius: 16px;
+      color: #536d6b;
+    }
+
+    .invite-content {
+      display: none;
+      margin-top: 28px;
+    }
+
+    .invite-content.show {
+      display: block;
+    }
+
+    .clinic-name {
+      margin: 0 0 8px;
+      font-size: 22px;
+    }
+
+    .invite-description {
+      margin: 0 0 24px;
+      color: #647977;
+      line-height: 1.7;
+    }
+
+    .invite-details {
+      display: grid;
+      gap: 14px;
+      margin: 0;
+    }
+
+    .invite-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 14px 0;
+      border-bottom: 1px solid #edf2f1;
+    }
+
+    .invite-row span {
+      color: #778b89;
+    }
+
+    .invite-row strong {
+      text-align: right;
+    }
+
+    .error {
+      background: #fff4f3;
+      color: #984b45;
+    }
+
+    @media (max-width: 540px) {
+      .activation-card {
+        padding: 26px 22px;
+      }
+
+      .invite-row {
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .invite-row strong {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="activation-card">
+
+    <div class="brand">
+      <div class="brand-mark">I</div>
+
+      <p class="eyebrow">INNERA CLINICAL</p>
+      <h1>院所成員邀請</h1>
+    </div>
+
+    <div
+      id="activationStatus"
+      class="status-message"
+    >
+      正在確認邀請資料...
+    </div>
+
+    <section
+      id="inviteContent"
+      class="invite-content"
+    >
+      <h2
+        id="inviteClinicName"
+        class="clinic-name"
+      >
+        —
+      </h2>
+
+      <p class="invite-description">
+        你收到一份加入心域醫療端的院所成員邀請。
+      </p>
+
+      <div class="invite-details">
+
+        <div class="invite-row">
+          <span>受邀成員</span>
+          <strong id="inviteDisplayName">—</strong>
+        </div>
+
+        <div class="invite-row">
+          <span>Email</span>
+          <strong id="inviteEmail">—</strong>
+        </div>
+
+        <div class="invite-row">
+          <span>角色</span>
+          <strong id="inviteRole">—</strong>
+        </div>
+
+        <div class="invite-row">
+          <span>邀請期限</span>
+          <strong id="inviteExpiry">—</strong>
+        </div>
+
+      </div>
+      </section>
+
+  </main>
+
+
+  <!-- Firebase compat SDK -->
+  <script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-functions-compat.js"></script>
+
+  <!-- 與醫療端使用相同 Firebase 專案 -->
+  <script defer src="js/firebase-config.js"></script>
+
+  <!-- Staff activation -->
+  <script defer src="js/clinic/staff-activate.js"></script>
+
+</body>
+</html>
