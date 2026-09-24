@@ -168,14 +168,6 @@
           actionCodeSettings
         );
 
-      console.log(
-        "[Staff Invite] Email link sent:",
-        {
-          email,
-          activationUrl: activationUrl.toString()
-        }
-      );
-
       closeAddStaffModal();
 
       document
@@ -218,7 +210,7 @@
         "functions/already-exists"
       ) {
         message =
-          "這個 Email 已經有帳號";
+          "此 Email 已是院所成員；若帳號已停用，請直接在成員列表中重新啟用";
       }
 
       if (
