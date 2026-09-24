@@ -179,6 +179,8 @@
       );
 
       await window.InneraClinicStaff.load();
+      await window.InneraClinicManagement
+        ?.loadPendingInvites();
 
     } catch (error) {
       console.error(

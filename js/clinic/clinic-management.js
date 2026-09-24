@@ -14,6 +14,7 @@
 
     window.InneraClinicStaff?.load();
     window.InneraClinicSettings?.load();
+    loadPendingInvites();
 
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
