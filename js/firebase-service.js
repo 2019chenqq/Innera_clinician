@@ -57,6 +57,21 @@
     return db;
   }
 
+  async function guardedFirestoreRead(
+    source,
+    operation
+  ) {
+    try {
+      return await operation();
+    } catch (error) {
+      console.warn(
+        `[Innera] ${source} 讀取失敗：`,
+        error
+      );
+
+      throw error;
+    }
+  }
   async function signInWithGoogle() {
     const authInstance = getAuth();
 
@@ -127,14 +142,18 @@
     throw new Error("缺少 clinicId");
   }
 
-  const snapshot = await getDb()
-    .collection("clinicalShares")
-    .doc(user.uid)
-    .collection("clinics")
-    .doc(targetClinicId)
-    .collection("sleepRecords")
-    .get();
-
+  const snapshot =
+  await guardedFirestoreRead(
+    "current-user-sleep",
+    () =>
+      getDb()
+        .collection("clinicalShares")
+        .doc(user.uid)
+        .collection("clinics")
+        .doc(targetClinicId)
+        .collection("sleepRecords")
+        .get()
+  );
   const records = snapshot.docs
     .map(normalizeSleepDoc)
     .sort((a, b) =>
@@ -157,10 +176,15 @@
       throw new Error("patientId 不可為空");
     }
 
-    const patientSnap = await getDb()
-      .collection("inneraPatients")
-      .doc(patientId)
-      .get();
+     const patientSnap =
+    await guardedFirestoreRead(
+      "patient-lookup",
+      () =>
+        getDb()
+          .collection("inneraPatients")
+          .doc(patientId)
+          .get()
+    );
 
     if (!patientSnap.exists) {
       throw new Error(`找不到患者：${patientId}`);
@@ -180,13 +204,18 @@
       throw new Error("缺少 clinicId");
     }
 
-    const snapshot = await getDb()
-      .collection("clinicalShares")
-      .doc(patient.firebaseUid)
-      .collection("clinics")
-      .doc(targetClinicId)
-      .collection("sleepRecords")
-      .get();
+    const snapshot =
+  await guardedFirestoreRead(
+    "patient-sleep",
+    () =>
+      getDb()
+        .collection("clinicalShares")
+        .doc(patient.firebaseUid)
+        .collection("clinics")
+        .doc(targetClinicId)
+        .collection("sleepRecords")
+        .get()
+  );
 
     const records = snapshot.docs
       .map(normalizeSleepDoc)
@@ -200,7 +229,15 @@
   async function getPatientHealthEvents({ patientId, days = 30, clinicId } = {}) {
     if (!getAuth().currentUser) throw new Error("尚未登入 Firebase。");
     if (!patientId) throw new Error("patientId 不可為空");
-    const patientSnap = await getDb().collection("inneraPatients").doc(patientId).get();
+    const patientSnap =
+      await guardedFirestoreRead(
+        "patient-lookup-health",
+        () =>
+          getDb()
+            .collection("inneraPatients")
+            .doc(patientId)
+            .get()
+      );
     if (!patientSnap.exists) throw new Error(`找不到患者：${patientId}`);
     const patient = patientSnap.data();
     if (!patient.linked || !patient.firebaseUid) throw new Error("此患者尚未連結心域");
@@ -214,13 +251,24 @@
     const since = new Date();
     since.setHours(0, 0, 0, 0);
     since.setDate(since.getDate() - Math.max(0, days - 1));
-    const snapshot = await getDb()
-      .collection("clinicalShares").doc(patient.firebaseUid)
-      .collection("clinics").doc(targetClinicId)
-      .collection("healthEvents")
-      .where("timestamp", ">=", firebase.firestore.Timestamp.fromDate(since))
-      .orderBy("timestamp", "desc")
-      .get();
+    const snapshot =
+    await guardedFirestoreRead(
+      "patient-health-events",
+      () =>
+        getDb()
+          .collection("clinicalShares")
+          .doc(patient.firebaseUid)
+          .collection("clinics")
+          .doc(targetClinicId)
+          .collection("healthEvents")
+          .where(
+            "timestamp",
+            ">=",
+            firebase.firestore.Timestamp.fromDate(since)
+          )
+          .orderBy("timestamp", "desc")
+          .get()
+    );
     return snapshot.docs.map((doc) => {
       const data = doc.data();
       return {
@@ -237,7 +285,15 @@
   async function getPatientDailyCheckIns({ patientId, days = 30, clinicId } = {}) {
     if (!getAuth().currentUser) throw new Error("尚未登入 Firebase。");
     if (!patientId) throw new Error("patientId 不可為空");
-    const patientSnap = await getDb().collection("inneraPatients").doc(patientId).get();
+    const patientSnap =
+      await guardedFirestoreRead(
+        "patient-lookup-daily-checkins",
+        () =>
+          getDb()
+            .collection("inneraPatients")
+            .doc(patientId)
+            .get()
+      );
     if (!patientSnap.exists) throw new Error(`找不到患者：${patientId}`);
     const patient = patientSnap.data();
     if (!patient.linked || !patient.firebaseUid) throw new Error("此患者尚未連結心域");
@@ -251,13 +307,24 @@
     const since = new Date();
     since.setHours(0, 0, 0, 0);
     since.setDate(since.getDate() - Math.max(0, days - 1));
-    const snapshot = await getDb()
-      .collection("clinicalShares").doc(patient.firebaseUid)
-      .collection("clinics").doc(targetClinicId)
-      .collection("dailyCheckIns")
-      .where("date", ">=", firebase.firestore.Timestamp.fromDate(since))
-      .orderBy("date", "desc")
-      .get();
+    const snapshot =
+    await guardedFirestoreRead(
+      "patient-daily-checkins",
+      () =>
+        getDb()
+          .collection("clinicalShares")
+          .doc(patient.firebaseUid)
+          .collection("clinics")
+          .doc(targetClinicId)
+          .collection("dailyCheckIns")
+          .where(
+            "date",
+            ">=",
+            firebase.firestore.Timestamp.fromDate(since)
+          )
+          .orderBy("date", "desc")
+          .get()
+    );
     return snapshot.docs.map((doc) => {
       const data = doc.data();
       return {
@@ -281,10 +348,15 @@ async function getPatientAiSummary({
     throw new Error("patientId 不可為空");
   }
 
-  const patientSnap = await getDb()
-    .collection("inneraPatients")
-    .doc(patientId)
-    .get();
+  const patientSnap =
+    await guardedFirestoreRead(
+      "patient-lookup-ai-summary",
+      () =>
+        getDb()
+          .collection("inneraPatients")
+          .doc(patientId)
+          .get()
+    );
 
   if (!patientSnap.exists) {
     throw new Error(`找不到患者：${patientId}`);
@@ -304,14 +376,19 @@ async function getPatientAiSummary({
       throw new Error("缺少 clinicId");
     }
 
-  const summarySnap = await getDb()
-    .collection("clinicalShares")
-    .doc(patient.firebaseUid)
-    .collection("clinics")
-    .doc(targetClinicId)
-    .collection("aiSummaries")
-    .doc("current")
-    .get();
+  const summarySnap =
+    await guardedFirestoreRead(
+      "patient-ai-summary",
+      () =>
+        getDb()
+          .collection("clinicalShares")
+          .doc(patient.firebaseUid)
+          .collection("clinics")
+          .doc(targetClinicId)
+          .collection("aiSummaries")
+          .doc("current")
+          .get()
+    );
 
   if (!summarySnap.exists) {
     return null;
@@ -332,10 +409,15 @@ async function getPatientAiSummary({
       throw new Error("patientId 不可為空");
     }
 
-    const patientSnap = await getDb()
-      .collection("inneraPatients")
-      .doc(patientId)
-      .get();
+    const patientSnap =
+      await guardedFirestoreRead(
+        "patient-lookup-medications",
+        () =>
+          getDb()
+            .collection("inneraPatients")
+            .doc(patientId)
+            .get()
+      );
 
     if (!patientSnap.exists) {
       throw new Error(`找不到患者：${patientId}`);
@@ -355,13 +437,18 @@ async function getPatientAiSummary({
       throw new Error("缺少 clinicId");
     }
 
-    const snapshot = await getDb()
-      .collection("clinicalShares")
-      .doc(patient.firebaseUid)
-      .collection("clinics")
-      .doc(targetClinicId)
-      .collection("medications")
-      .get();
+    const snapshot =
+    await guardedFirestoreRead(
+      "patient-medications",
+      () =>
+        getDb()
+          .collection("clinicalShares")
+          .doc(patient.firebaseUid)
+          .collection("clinics")
+          .doc(targetClinicId)
+          .collection("medications")
+          .get()
+    );
 
     return snapshot.docs.map((doc) => ({
       id: doc.id,

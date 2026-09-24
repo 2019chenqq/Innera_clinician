@@ -189,6 +189,18 @@
           }
         },
         (error) => {
+
+          const handled =
+            window.InneraClinicalAuth
+              ?.handleFirestoreError?.(
+                error,
+                "patient-realtime-listener"
+              );
+
+          if (handled) {
+            return;
+          }
+
           console.error(
             "[Innera] Firestore 患者即時監聽失敗：",
             error

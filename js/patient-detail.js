@@ -768,6 +768,14 @@ function showDashboard() {
 }
 
 function showPatientDetail(patient) {
+  const currentRole =
+    window.INNERA_CURRENT_STAFF?.role || "";
+
+  if (currentRole !== "doctor") {
+    showToast("臨床資料僅限醫師查看");
+    return;
+  }
+
   if (!patient || !patient.linked) {
     showToast("此個案尚未連結心域");
     return;
