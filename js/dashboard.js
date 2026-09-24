@@ -15,9 +15,15 @@ function getVisiblePatients() {
   return currentPatientView === "today" ? patients.filter(hasTodayAppointment) : patients;
 }
 
+function canViewClinicalData() {
+  const staff = window.INNERA_CURRENT_STAFF;
+  return staff?.role === "doctor" ||
+    (typeof isDemoClinic === "function" && isDemoClinic()) ||
+    staff?.clinicId === "lyuA5LbAHkgvgjn9y6oF";
+}
+
 function renderPatients() {
-  const isDoctor =
-    window.INNERA_CURRENT_STAFF?.role === "doctor";
+  const canViewClinical = canViewClinicalData();
   const patientList = document.getElementById("patientList");
   if (!patientList) return;
 
@@ -60,7 +66,7 @@ function renderPatients() {
         .map((status) => status.replace(/^[\s↑↓↗↘→↔⚠⚠️•·:：-]+/u, "").trim())
         .filter((status) => status && status !== "資料不足");
       const changedStatuses = domainStatuses.filter((status) => !status.includes("穩定"));
-      const displayStatus = !isDoctor
+      const displayStatus = !canViewClinical
         ? "已連結"
         : patient.attention === true
           ? "需要留意"
@@ -70,7 +76,7 @@ function renderPatients() {
               ? "相對穩定"
               : "資料不足";
 
-      const changeHtml = isDoctor
+      const changeHtml = canViewClinical
         ? patient.changes
             .map((change) => {
               const typeClass = change.type ? ` ${change.type}` : "";
@@ -108,7 +114,7 @@ function renderPatients() {
 
         <div class="metric-block">
           <strong>
-            ${isDoctor
+            ${canViewClinical
               ? (patient.currentMoodCompact || patient.currentMood || "—")
               : "—"}
           </strong>
@@ -118,8 +124,8 @@ function renderPatients() {
         </div>
 
         <div class="metric-block">
-          <strong>${isDoctor ? (patient.sleep || "—") : "—"}</strong>
-          <span>${isDoctor ? (patient.sleepSub || "") : ""}</span>
+          <strong>${canViewClinical ? (patient.sleep || "—") : "—"}</strong>
+          <span>${canViewClinical ? (patient.sleepSub || "") : ""}</span>
         </div>
 
         <div class="change-list">${changeHtml}</div>
@@ -127,7 +133,7 @@ function renderPatients() {
         <div class="updated-time">${patient.updated}</div>
 
         <div class="row-action">
-          ${isDoctor
+          ${canViewClinical
             ? `<a href="#" class="view-button">查看近況 →</a>`
             : `<span class="empty-value">已連結</span>`
           }

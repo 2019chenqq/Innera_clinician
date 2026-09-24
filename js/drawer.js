@@ -2,6 +2,11 @@
 
 
 function openDrawer(row) {
+  if (!canViewClinicalData()) {
+    showToast("臨床資料僅限醫師查看");
+    return;
+  }
+
   state.activePatientId = row.dataset.code || null;
 
   const selectedPatient = patients.find(

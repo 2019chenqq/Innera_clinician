@@ -768,10 +768,7 @@ function showDashboard() {
 }
 
 function showPatientDetail(patient) {
-  const currentRole =
-    window.INNERA_CURRENT_STAFF?.role || "";
-
-  if (currentRole !== "doctor") {
+  if (!canViewClinicalData()) {
     showToast("臨床資料僅限醫師查看");
     return;
   }
@@ -794,6 +791,7 @@ function showPatientDetail(patient) {
 }
 
 function renderPatientDetail(patient) {
+  if (!canViewClinicalData()) return;
   const displayName = maskPatientName(patient.fullName);
 
   document.getElementById("detailAvatar").textContent =
