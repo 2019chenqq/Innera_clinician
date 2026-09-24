@@ -452,6 +452,11 @@
     if (typeof showDashboard === "function") {
       showDashboard();
     }
+
+    document.querySelectorAll(".nav-item").forEach((item) => {
+      item.classList.remove("active");
+    });
+    document.getElementById("todayClinicNav")?.classList.add("active");
   }
 
 
