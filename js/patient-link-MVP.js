@@ -93,13 +93,9 @@
   }
 
   async function createPatient({
-    legalName,
-    queueNumber = null,
-    visitType = null
+    legalName
   }) {
-    const user = authUser();
-    const firestore = db();
-    const clinicId = activeClinicId();
+    authUser();
 
     const cleanLegalName =
       String(legalName || "").trim();
@@ -108,219 +104,27 @@
       throw new Error("請輸入患者姓名");
     }
 
-    const counterRef =
-      firestore
-        .collection("inneraCounters")
-        .doc("patients");
+    const result =
+      await firebase
+        .app()
+        .functions("us-central1")
+        .httpsCallable(
+          "createClinicPatient"
+        )({
+          legalName: cleanLegalName
+        });
 
-    return firestore.runTransaction(
-      async (tx) => {
-        const counterSnap =
-          await tx.get(counterRef);
-
-        const current =
-          counterSnap.exists
-            ? Number(
-                counterSnap.data().lastNumber || 0
-              )
-            : 0;
-
-        const next = current + 1;
-
-        const patientId =
-          formatPatientId(next);
-
-        const patientRef =
-          firestore
-            .collection("inneraPatients")
-            .doc(patientId);
-
-        tx.set(
-          counterRef,
-          {
-            lastNumber: next,
-            updatedAt:
-              firebase.firestore.FieldValue
-                .serverTimestamp()
-          },
-          { merge: true }
-        );
-
-        tx.set(
-          patientRef,
-          {
-            patientId,
-
-            legalName:
-              cleanLegalName,
-
-            clinicId,
-
-            // App 兌換之前都是 null
-            firebaseUid: null,
-
-            linked: false,
-
-            linkedAt: null,
-
-            // MVP 門診欄位；
-            // 未來可由掛號系統覆蓋
-            queueNumber:
-              queueNumber == null
-                ? null
-                : Number(queueNumber),
-
-            visitType:
-              visitType || null,
-
-            createdByUid:
-              user.uid,
-
-            createdAt:
-              firebase.firestore.FieldValue
-                .serverTimestamp(),
-
-            updatedAt:
-              firebase.firestore.FieldValue
-                .serverTimestamp()
-          }
-        );
-
-        return {
-          patientId,
-          legalName: cleanLegalName,
-          clinicId
-        };
-      }
-    );
+    return result.data;
   }
 
   async function createInvite({
     patientId,
     expiresHours = 24
   }) {
-    const user = authUser();
-
-    const firestore = db();
-    const clinicId = activeClinicId();
-
-    const cleanPatientId =
-      String(patientId || "").trim();
-
-    if (!cleanPatientId) {
-      throw new Error("缺少患者編號");
-    }
-
-    const patientRef =
-      firestore
-        .collection("inneraPatients")
-        .doc(cleanPatientId);
-
-    const patientSnap =
-      await patientRef.get();
-
-    if (!patientSnap.exists) {
-      throw new Error(
-        `找不到患者 ${cleanPatientId}`
-      );
-    }
-
-    const patient =
-      normalizePatient(patientSnap);
-
-    assertSameClinic(patient);
-
-    if (patient.linked === true) {
-      throw new Error(
-        "此患者已經連結心域"
-      );
-    }
-
-    let code = null;
-    let inviteRef = null;
-
-    for (let i = 0; i < 8; i++) {
-      const candidate =
-        randomInviteCode();
-
-      const ref =
-        firestore
-          .collection("inneraInvites")
-          .doc(candidate);
-
-      const snap =
-        await ref.get();
-
-      if (!snap.exists) {
-        code = candidate;
-        inviteRef = ref;
-        break;
-      }
-    }
-
-    if (!code || !inviteRef) {
-      throw new Error(
-        "無法產生唯一邀請碼，請再試一次"
-      );
-    }
-
-    const numericExpiresHours =
-      Number(expiresHours);
-
-    const safeExpiresHours =
-      Number.isFinite(numericExpiresHours) &&
-      numericExpiresHours > 0
-        ? numericExpiresHours
-        : 24;
-
-    const expiresAt =
-      new Date(
-        Date.now() +
-        safeExpiresHours *
-          60 *
-          60 *
-          1000
-      );
-
-    await inviteRef.set({
-      code,
-
-      patientId:
-        cleanPatientId,
-
-      clinicId,
-
-      legalName:
-        patient.legalName || "",
-
-      status:
-        "unused",
-
-      usedByUid:
-        null,
-
-      usedAt:
-        null,
-
-      expiresAt:
-        firebase.firestore.Timestamp
-          .fromDate(expiresAt),
-
-      createdByUid:
-        user.uid,
-
-      createdAt:
-        firebase.firestore.FieldValue
-          .serverTimestamp()
-    });
-
-    return {
-      code,
-      patientId: cleanPatientId,
-      legalName:
-        patient.legalName || "",
-      expiresAt
-    };
+    authUser();
+    const result = await firebase.app().functions("us-central1")
+      .httpsCallable("createClinicInvite")({ patientId, expiresHours });
+    return { ...result.data, expiresAt: new Date(result.data.expiresAt) };
   }
 
   function watchPatient(

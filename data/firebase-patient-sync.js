@@ -44,11 +44,6 @@
   }
 
 
-  function toNumber(value, fallback = 9999) {
-    const number = Number(value);
-    return Number.isFinite(number) ? number : fallback;
-  }
-
   function getPatientList() {
     if (Array.isArray(window.patients)) {
       return window.patients;
@@ -63,14 +58,26 @@
 
   function firestorePatientToUi(data, docId) {
     const linked = data.linked === true;
+    // MVP：只有有效正整數叫號才視為今日有掛號。
+    const queueNumber = typeof data.queueNumber === "number" || typeof data.queueNumber === "string"
+      ? Number(data.queueNumber)
+      : NaN;
+    const hasAppointment = Number.isInteger(queueNumber) && queueNumber > 0;
 
     return {
       id: safeString(data.patientId, docId),
       fullName: safeString(data.legalName, "未命名個案"),
 
-      queueNumber: toNumber(data.queueNumber, 9999),
-      registrationTime: safeString(data.registrationTime, "—"),
-      visitType: safeString(data.visitType, "複診"),
+      queueNumber:
+        hasAppointment ? queueNumber : null,
+
+      registrationTime:
+        safeString(data.registrationTime, ""),
+
+      visitType:
+        safeString(data.visitType, ""),
+
+      hasAppointment,
 
       linked,
       attention: data.attention === true,

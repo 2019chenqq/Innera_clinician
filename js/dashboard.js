@@ -1,16 +1,33 @@
 
 
+let currentPatientView = "today";
+
+function hasTodayAppointment(patient) {
+  if (typeof patient.hasAppointment === "boolean") return patient.hasAppointment;
+  // Demo 資料未提供 hasAppointment，沿用有效叫號判定。
+  const queueNumber = typeof patient.queueNumber === "number" || typeof patient.queueNumber === "string"
+    ? Number(patient.queueNumber)
+    : NaN;
+  return Number.isInteger(queueNumber) && queueNumber > 0;
+}
+
+function getVisiblePatients() {
+  return currentPatientView === "today" ? patients.filter(hasTodayAppointment) : patients;
+}
+
 function renderPatients() {
+  const isDoctor =
+    window.INNERA_CURRENT_STAFF?.role === "doctor";
   const patientList = document.getElementById("patientList");
   if (!patientList) return;
 
   patientList.innerHTML = "";
 
-  const sortedPatients = [...patients].sort((a, b) => {
-    const queueA = Number.isFinite(Number(a.queueNumber))
+  const sortedPatients = [...getVisiblePatients()].sort((a, b) => {
+    const queueA = hasTodayAppointment(a) && Number.isFinite(Number(a.queueNumber))
       ? Number(a.queueNumber)
       : Number.MAX_SAFE_INTEGER;
-    const queueB = Number.isFinite(Number(b.queueNumber))
+    const queueB = hasTodayAppointment(b) && Number.isFinite(Number(b.queueNumber))
       ? Number(b.queueNumber)
       : Number.MAX_SAFE_INTEGER;
 
@@ -31,6 +48,11 @@ function renderPatients() {
     row.dataset.viewed = patient.viewed;
 
     const displayName = maskPatientName(patient.fullName);
+    const hasAppointment = hasTodayAppointment(patient);
+    const queueHtml = hasAppointment ? `<span class="queue-number">${patient.queueNumber}號</span>` : "";
+    const appointmentMeta = hasAppointment
+      ? ["下午診", patient.registrationTime ? `${patient.registrationTime} 掛號` : "", patient.visitType].filter(Boolean).join("・")
+      : "目前無今日掛號";
 
     if (patient.linked) {
       const domainStatuses = Object.values(patient.aiSummary?.domains || {})
@@ -38,23 +60,29 @@ function renderPatients() {
         .map((status) => status.replace(/^[\s↑↓↗↘→↔⚠⚠️•·:：-]+/u, "").trim())
         .filter((status) => status && status !== "資料不足");
       const changedStatuses = domainStatuses.filter((status) => !status.includes("穩定"));
-      const displayStatus = patient.attention === true
-        ? "需要留意"
-        : changedStatuses.length
-          ? "近期有變化"
-          : domainStatuses.length ? "相對穩定" : "資料不足";
+      const displayStatus = !isDoctor
+        ? "已連結"
+        : patient.attention === true
+          ? "需要留意"
+          : changedStatuses.length
+            ? "近期有變化"
+            : domainStatuses.length
+              ? "相對穩定"
+              : "資料不足";
 
-      const changeHtml = patient.changes
-        .map((change) => {
-          const typeClass = change.type ? ` ${change.type}` : "";
+      const changeHtml = isDoctor
+        ? patient.changes
+            .map((change) => {
+              const typeClass = change.type ? ` ${change.type}` : "";
 
-          return `
-            <span class="change-item${typeClass}">
-              ${change.text}
-            </span>
-          `;
-        })
-        .join("");
+              return `
+                <span class="change-item${typeClass}">
+                  ${change.text}
+                </span>
+              `;
+            })
+            .join("")
+        : "";
 
       row.innerHTML = `
         <div class="patient-info">
@@ -63,11 +91,11 @@ function renderPatients() {
           <div class="patient-content">
             <div class="patient-title">
               <span class="patient-name">${displayName}</span>
-              <span class="queue-number">${patient.queueNumber}號</span>
+              ${queueHtml}
             </div>
 
             <span class="patient-meta">
-              下午診・${patient.registrationTime} 掛號・${patient.visitType}
+              ${appointmentMeta}
             </span>
           </div>
         </div>
@@ -80,7 +108,9 @@ function renderPatients() {
 
         <div class="metric-block">
           <strong>
-            ${patient.currentMoodCompact || patient.currentMood || "—"}
+            ${isDoctor
+              ? (patient.currentMoodCompact || patient.currentMood || "—")
+              : "—"}
           </strong>
           <span>
             ${patient.currentMood ? "最新快速紀錄" : "尚無情緒紀錄"}
@@ -88,8 +118,8 @@ function renderPatients() {
         </div>
 
         <div class="metric-block">
-          <strong>${patient.sleep}</strong>
-          <span>${patient.sleepSub}</span>
+          <strong>${isDoctor ? (patient.sleep || "—") : "—"}</strong>
+          <span>${isDoctor ? (patient.sleepSub || "") : ""}</span>
         </div>
 
         <div class="change-list">${changeHtml}</div>
@@ -97,7 +127,10 @@ function renderPatients() {
         <div class="updated-time">${patient.updated}</div>
 
         <div class="row-action">
-          <a href="#" class="view-button">查看近況 →</a>
+          ${isDoctor
+            ? `<a href="#" class="view-button">查看近況 →</a>`
+            : `<span class="empty-value">已連結</span>`
+          }
         </div>
       `;
     } else {
@@ -108,11 +141,11 @@ function renderPatients() {
           <div class="patient-content">
             <div class="patient-title">
               <span class="patient-name">${displayName}</span>
-              <span class="queue-number">${patient.queueNumber}號</span>
+              ${queueHtml}
             </div>
 
             <span class="patient-meta">
-              下午診・${patient.registrationTime} 掛號・${patient.visitType}
+              ${appointmentMeta}
             </span>
           </div>
         </div>
@@ -131,13 +164,15 @@ function renderPatients() {
 
     patientList.appendChild(row);
   });
+  filterPatients();
 }
 
 function updateCounts() {
-  const total = patients.length;
-  const linked = patients.filter((patient) => patient.linked).length;
-  const attention = patients.filter((patient) => patient.attention).length;
-  const unread = patients.filter(
+  const visiblePatients = getVisiblePatients();
+  const total = visiblePatients.length;
+  const linked = visiblePatients.filter((patient) => patient.linked).length;
+  const attention = visiblePatients.filter((patient) => patient.attention).length;
+  const unread = visiblePatients.filter(
     (patient) => patient.linked && !patient.viewed
   ).length;
 
@@ -339,6 +374,15 @@ function initDashboard() {
         document.getElementById("patientDetailPage")?.classList.add("hidden");
         document.getElementById("dashboardMain")?.classList.remove("hidden");
 
+        if (item.dataset.patientView) {
+          currentPatientView = item.dataset.patientView;
+          const viewTitle = document.getElementById("patientViewTitle");
+          const listTitle = document.getElementById("patientListTitle");
+          if (viewTitle) viewTitle.textContent = currentPatientView === "today" ? "今日門診" : "所有個案";
+          if (listTitle) listTitle.textContent = currentPatientView === "today" ? "今日個案" : "所有個案";
+          renderPatients();
+          updateCounts();
+        }
         setFilter(item.dataset.navFilter);
       }
     });

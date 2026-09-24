@@ -59,21 +59,8 @@ function initModals() {
   const fullName =
     document.getElementById("newPatientName").value.trim();
 
-  const queueNumberRaw =
-    document.getElementById("newQueueNumber").value.trim();
-
-  const visitType =
-    document.getElementById("newVisitType").value;
-
-  if (!fullName || !queueNumberRaw) {
-    showToast("請完整填寫個案資料");
-    return;
-  }
-
-  const queueNumber = Number(queueNumberRaw);
-
-  if (!Number.isFinite(queueNumber) || queueNumber <= 0) {
-    showToast("掛號號碼格式不正確");
+  if (!fullName) {
+    showToast("請輸入個案姓名");
     return;
   }
 
@@ -100,12 +87,10 @@ function initModals() {
       submitButton.textContent = "新增中...";
     }
 
-    const created =
-      await window.InneraPatientLinkMVP.createPatient({
-        legalName: fullName,
-        queueNumber,
-        visitType
-      });
+  const created =
+    await window.InneraPatientLinkMVP.createPatient({
+      legalName: fullName
+    });
 
     console.info(
       "[Innera] 新增患者成功：",

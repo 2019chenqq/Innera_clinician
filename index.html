@@ -137,6 +137,7 @@
   <a
     href="#"
     class="nav-item active"
+    data-patient-view="today"
     data-nav-filter="all"
   >
     <i class="bi bi-calendar2-week nav-icon"></i>
@@ -146,8 +147,9 @@
   <a
     href="#"
     class="nav-item"
+    data-patient-view="all"
     data-nav-filter="all"
-  >
+    >
     <i class="bi bi-people nav-icon"></i>
     <span>所有個案</span>
   </a>
@@ -155,8 +157,9 @@
   <a
     href="#"
     class="nav-item"
+    data-patient-view="all"
     data-nav-filter="attention"
-  >
+    >
     <i class="bi bi-exclamation-triangle nav-icon"></i>
     <span>需關注</span>
   </a>
@@ -211,7 +214,7 @@
 
         <div>
           <p class="eyebrow">TODAY'S CLINIC</p>
-          <h1>今日門診</h1>
+          <h1 id="patientViewTitle">今日門診</h1>
           <p class="date-text" id="clinicSessionDate">載入門診時間中…</p>
         </div>
 
@@ -323,7 +326,7 @@
   <div class="section-header">
 
     <div>
-      <h2>今日個案</h2>
+      <h2 id="patientListTitle">今日個案</h2>
       <p>
         優先呈現本診次掛號且已連結心域的個案。
       </p>
@@ -1109,32 +1112,6 @@
             required
             >
       </div>
-
-
-      <div class="form-group">
-        <label>掛號號碼</label>
-        <input
-          type="number"
-          id="newQueueNumber"
-          placeholder="例如：42"
-          required
-        >
-      </div>
-
-
-      <div class="form-group">
-        <label>看診類型</label>
-
-        <select id="newVisitType">
-          <option value="複診">複診</option>
-          <option value="初診">初診</option>
-          <option value="預約門診">
-            預約門診
-          </option>
-        </select>
-
-      </div>
-
 
       <div class="modal-actions">
 
