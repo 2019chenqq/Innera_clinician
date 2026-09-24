@@ -25,7 +25,278 @@
     status.style.display = "block";
   }
 
+  function showPasswordMessage(
+    text,
+    isError = false
+    ) {
 
+    const message =
+        getElement("passwordSetupMessage");
+
+    if (!message) return;
+
+
+    message.textContent = text;
+
+    message.style.display = "block";
+
+    message.style.background =
+        isError
+        ? "#fff4f3"
+        : "#f2f7f6";
+
+    message.style.color =
+        isError
+        ? "#984b45"
+        : "#536d6b";
+    }
+
+    function showPasswordSetupIfReady() {
+
+    const user =
+        firebase.auth().currentUser;
+
+
+    if (
+        !user ||
+        user.emailVerified !== true
+    ) {
+        return false;
+    }
+
+
+    const section =
+        getElement("passwordSetupSection");
+
+
+    if (section) {
+        section.style.display = "block";
+    }
+
+
+    return true;
+    }
+
+    async function activateStaffAccount() {
+
+        const button =
+            getElement("activateStaffButton");
+
+
+        const password =
+            String(
+            getElement("staffPassword")?.value || ""
+            );
+
+
+        const passwordConfirm =
+            String(
+            getElement("staffPasswordConfirm")?.value || ""
+            );
+
+
+        if (password.length < 8) {
+            showPasswordMessage(
+            "密碼至少需要 8 碼。",
+            true
+            );
+            return;
+        }
+
+
+        if (password !== passwordConfirm) {
+            showPasswordMessage(
+            "兩次輸入的密碼不一致。",
+            true
+            );
+            return;
+        }
+
+
+        const user =
+            firebase.auth().currentUser;
+
+
+        if (!user) {
+            showPasswordMessage(
+            "登入狀態已失效，請重新開啟邀請信中的連結。",
+            true
+            );
+            return;
+        }
+
+
+        if (user.emailVerified !== true) {
+            showPasswordMessage(
+            "請先完成 Email 驗證。",
+            true
+            );
+            return;
+        }
+
+
+        const {
+            inviteId,
+            token
+        } = getInviteContext();
+
+
+        if (!inviteId || !token) {
+            showPasswordMessage(
+            "邀請資料不完整，請重新開啟邀請連結。",
+            true
+            );
+            return;
+        }
+
+
+        if (button) {
+            button.disabled = true;
+            button.textContent = "啟用中...";
+        }
+
+
+        try {
+
+            // ---------------------------------------------------
+            // 1. 由受邀者自己設定 Firebase Auth 密碼
+            // ---------------------------------------------------
+
+            await user.updatePassword(
+            password
+            );
+
+
+            // ---------------------------------------------------
+            // 2. 正式接受 Staff Invite
+            // ---------------------------------------------------
+
+            const acceptStaffInvite =
+            firebase
+                .app()
+                .functions("us-central1")
+                .httpsCallable(
+                "acceptStaffInvite"
+                );
+
+
+            const result =
+            await acceptStaffInvite({
+                inviteId,
+                token
+            });
+
+
+            if (!result.data?.success) {
+            throw new Error(
+                "Staff invitation acceptance failed."
+            );
+            }
+
+
+            // ---------------------------------------------------
+            // 3. 完成
+            // ---------------------------------------------------
+
+            const passwordSection =
+            getElement(
+                "passwordSetupSection"
+            );
+
+
+            if (passwordSection) {
+            passwordSection.style.display =
+                "none";
+            }
+
+
+            const status =
+            getElement("activationStatus");
+
+
+            if (status) {
+
+            status.classList.remove("error");
+
+            status.style.display = "block";
+
+            status.textContent =
+                "帳號啟用完成，你現在已經可以登入心域醫療端。";
+            }
+
+        } catch (error) {
+
+            console.error(
+            "[Innera] Staff account activation failed",
+            error
+            );
+
+
+            let message =
+            "帳號啟用失敗，請稍後再試。";
+
+
+            if (
+            error.code ===
+            "auth/weak-password"
+            ) {
+            message =
+                "密碼強度不足，請設定更安全的密碼。";
+            }
+
+
+            if (
+            error.code ===
+            "auth/requires-recent-login"
+            ) {
+            message =
+                "驗證狀態已逾時，請重新開啟邀請信中的連結。";
+            }
+
+
+            if (
+            error.code ===
+            "functions/already-exists"
+            ) {
+            message =
+                "這個帳號已經是此院所成員。";
+            }
+
+
+            if (
+            error.code ===
+            "functions/failed-precondition"
+            ) {
+            message =
+                error.message ||
+                "目前無法接受這份邀請。";
+            }
+
+
+            if (
+            error.code ===
+            "functions/permission-denied"
+            ) {
+            message =
+                "目前登入帳號與受邀帳號不一致。";
+            }
+
+
+            showPasswordMessage(
+            message,
+            true
+            );
+
+
+        } finally {
+
+            if (button) {
+            button.disabled = false;
+            button.textContent =
+                "完成帳號啟用";
+            }
+        }
+        }
   function hideStatus() {
     const status =
       getElement("activationStatus");
@@ -155,7 +426,7 @@
         window.location.href
         )
     ) {
-        return false;
+        return "none";
     }
 
 
@@ -170,7 +441,7 @@
         "邀請資料不完整，無法完成 Email 驗證。"
         );
 
-        return true;
+        return "error";
     }
 
 
@@ -248,7 +519,7 @@
             "Email 驗證尚未完成，請重新開啟邀請信中的連結。"
         );
 
-        return true;
+        return "error";
         }
 
 
@@ -280,7 +551,7 @@
         );
 
 
-        return true;
+        return "success";
 
 
     } catch (error) {
@@ -324,7 +595,7 @@
 
         showError(message);
 
-        return true;
+        return "error";
     }
     }
 
@@ -500,8 +771,15 @@
   }
 
   document.addEventListener(
-  "DOMContentLoaded",
-  async () => {
+    "DOMContentLoaded",
+    async () => {
+
+    getElement(
+        "activateStaffButton"
+        )?.addEventListener(
+        "click",
+        activateStaffAccount
+        );
 
     // Firebase 初始化
     if (
@@ -517,24 +795,29 @@
 
     // 如果是從 Email Link 進來，
     // 先完成 Firebase sign-in / Email verification。
-    const handledEmailLink =
+    const emailLinkResult =
       await completeEmailLinkSignIn();
 
 
-    // 再載入 Staff Invitation 資訊。
+    // Email Link 本身失敗時，
+    // 保留錯誤畫面，不要再被 loadInvitation 蓋掉。
+    if (emailLinkResult === "error") {
+      return;
+    }
+
+
+    // 驗證成功或只是一般 invite preview，
+    // 才繼續顯示 invitation。
     await loadInvitation();
+    showPasswordSetupIfReady();
 
-
-    // 驗證成功後顯示明確狀態。
-    if (handledEmailLink) {
+    if (emailLinkResult === "success") {
 
       const user =
         firebase.auth().currentUser;
 
 
-      if (
-        user?.emailVerified === true
-      ) {
+      if (user?.emailVerified === true) {
 
         const status =
           getElement("activationStatus");
@@ -550,6 +833,7 @@
           status.textContent =
             "Email 驗證完成，下一步請設定你的登入密碼。";
         }
+         showPasswordSetupIfReady();
       }
     }
   }
