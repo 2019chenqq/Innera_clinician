@@ -53,10 +53,10 @@
 
     button.disabled = loading;
     button.textContent =
-      loading ? "建立中..." : "建立帳號";
+      loading ? "建立邀請中..." : "寄送邀請";
   }
 
-  async function createClinicStaff(event) {
+  async function createStaffInvite(event) {
     event.preventDefault();
 
     const currentStaff = Core.getCurrentStaff();
@@ -86,11 +86,6 @@
         .getElementById("newStaffEmail")
         ?.value.trim() || "";
 
-    const password =
-      document
-        .getElementById("newStaffPassword")
-        ?.value || "";
-
     const role =
       document
         .getElementById("newStaffRole")
@@ -101,9 +96,9 @@
         .getElementById("newStaffDepartment")
         ?.value.trim() || "";
 
-    if (!displayName || !email || !password) {
+    if (!displayName || !email) {
       Core.showToast(
-        "請填寫姓名、Email 與密碼"
+        "請填寫姓名與 Email"
       );
       return false;
     }
@@ -116,18 +111,70 @@
           .app()
           .functions("us-central1");
 
-      const createStaff =
+      const createInvite =
         functions.httpsCallable(
-          "createClinicStaff"
+          "createStaffInvite"
         );
 
-      await createStaff({
-        displayName,
-        email,
-        password,
-        role,
-        department
-      });
+      const result =
+        await createInvite({
+          displayName,
+          email,
+          role,
+          department
+        });
+
+      const inviteId =
+        result.data?.inviteId;
+
+      const inviteToken =
+        result.data?.token;
+
+
+      if (!inviteId || !inviteToken) {
+        throw new Error(
+          "建立邀請成功，但缺少邀請連結資料。"
+        );
+      }
+
+
+      const activationUrl =
+        new URL(
+          "https://2019chenqq.github.io/Innera_clinician/staff-activate.html"
+        );
+
+
+      activationUrl.searchParams.set(
+        "invite",
+        inviteId
+      );
+
+      activationUrl.searchParams.set(
+        "token",
+        inviteToken
+      );
+
+
+      const actionCodeSettings = {
+        url: activationUrl.toString(),
+        handleCodeInApp: true
+      };
+
+
+      await firebase
+        .auth()
+        .sendSignInLinkToEmail(
+          email,
+          actionCodeSettings
+        );
+
+      console.log(
+        "[Staff Invite] Email link sent:",
+        {
+          email,
+          activationUrl: activationUrl.toString()
+        }
+      );
 
       closeAddStaffModal();
 
@@ -136,7 +183,7 @@
         ?.reset();
 
       Core.showToast(
-        `${displayName} 已建立`
+        `邀請已寄送至 ${email}`
       );
 
       await window.InneraClinicStaff.load();
@@ -148,7 +195,23 @@
       );
 
       let message =
-        "建立院所成員失敗";
+        "寄送成員邀請失敗";
+
+      if (
+        error.code ===
+        "auth/unauthorized-continue-uri"
+      ) {
+        message =
+          "邀請網址尚未加入 Firebase Authorized Domains";
+      }
+
+      if (
+        error.code ===
+        "auth/invalid-email"
+      ) {
+        message =
+          "Email 格式不正確";
+      }
 
       if (
         error.code ===
@@ -434,7 +497,7 @@ async function updateClinicStaffRole(
   window.InneraClinicStaffActions = {
     openAddStaffModal,
     closeAddStaffModal,
-    createClinicStaff,
+    createStaffInvite,
     updateClinicStaffRole,
     disableClinicStaff,
     enableClinicStaff

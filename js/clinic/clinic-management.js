@@ -39,8 +39,7 @@
     document.getElementById("cancelAddClinicStaff")
       ?.addEventListener("click", Actions.closeAddStaffModal);
     document.getElementById("addClinicStaffForm")
-      ?.addEventListener("submit", Actions.createClinicStaff);
-
+      ?.addEventListener("submit", Actions.createStaffInvite);
     document.getElementById("addClinicStaffModal")
       ?.addEventListener("click", (event) => {
         if (event.target.id === "addClinicStaffModal") Actions.closeAddStaffModal();
