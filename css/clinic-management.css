@@ -355,6 +355,26 @@
   white-space: nowrap;
 }
 
+.pending-invite-revoke-button {
+  min-height: 34px;
+  padding: 0 12px;
+
+  border: 1px solid #efcaca;
+  border-radius: 8px;
+
+  background: #fff6f6;
+  color: #b95858;
+
+  cursor: pointer;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+
+.pending-invite-revoke-button:hover {
+  background: #fbeded;
+}
 
 .clinic-pending-invites-message {
   padding: 24px 0;

@@ -166,6 +166,15 @@ function renderPendingInvites(invites) {
               ${expiryText}
             </span>
 
+            <button
+              type="button"
+              class="pending-invite-revoke-button"
+              data-invite-id="${invite.inviteId}"
+              data-invite-name="${invite.displayName || "此成員"}"
+            >
+              撤銷邀請
+            </button>
+
           </div>
 
         </article>
@@ -261,6 +270,26 @@ async function loadPendingInvites() {
         if (event.target.id === "addClinicStaffModal") Actions.closeAddStaffModal();
       });
 
+    document
+      .getElementById("pendingInvitesList")
+      ?.addEventListener(
+        "click",
+        (event) => {
+
+          const button =
+            event.target.closest(
+              ".pending-invite-revoke-button"
+            );
+
+          if (!button) return;
+
+          Actions.revokeStaffInvite(
+            button.dataset.inviteId,
+            button.dataset.inviteName || "此成員"
+          );
+        }
+      );
+
     document.getElementById("clinicStaffList")
       ?.addEventListener("click", (event) => {
         const disableButton = event.target.closest(".staff-disable-button");
@@ -271,7 +300,6 @@ async function loadPendingInvites() {
           );
           return;
         }
-
         const enableButton = event.target.closest(".staff-enable-button");
         if (enableButton) {
           Actions.enableClinicStaff(

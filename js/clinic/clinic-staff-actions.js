@@ -485,13 +485,122 @@ async function updateClinicStaffRole(
       Core.showToast(message);
     }
   }
+  async function revokeStaffInvite(
+    inviteId,
+    inviteName
+  ) {
 
+    const currentStaff =
+      Core.getCurrentStaff();
+
+    if (!currentStaff) return false;
+
+
+    if (!isClinicAdmin(currentStaff)) {
+      Core.showToast(
+        "只有院所管理員可以撤銷邀請"
+      );
+      return false;
+    }
+
+
+    if (isDemoClinic(currentStaff)) {
+      Core.showToast(
+        "展示環境不開放撤銷成員邀請。"
+      );
+      return false;
+    }
+
+
+    if (
+      !window.confirm(
+        `確定要撤銷 ${inviteName} 的邀請嗎？`
+      )
+    ) {
+      return false;
+    }
+
+
+    try {
+
+      const fn =
+        firebase
+          .app()
+          .functions("us-central1")
+          .httpsCallable(
+            "revokeStaffInvite"
+          );
+
+
+      await fn({
+        inviteId
+      });
+
+
+      Core.showToast(
+        `${inviteName} 的邀請已撤銷`
+      );
+
+
+      await window
+        .InneraClinicManagement
+        ?.loadPendingInvites();
+
+
+      return true;
+
+
+    } catch (error) {
+
+      console.error(
+        "[Innera] 撤銷成員邀請失敗",
+        error
+      );
+
+
+      let message =
+        "撤銷成員邀請失敗";
+
+
+      if (
+        error.code ===
+        "functions/permission-denied"
+      ) {
+        message =
+          "你沒有撤銷這份邀請的權限";
+      }
+
+
+      if (
+        error.code ===
+        "functions/failed-precondition"
+      ) {
+        message =
+          "這份邀請已經無法撤銷";
+      }
+
+
+      if (
+        error.code ===
+        "functions/not-found"
+      ) {
+        message =
+          "找不到這份邀請";
+      }
+
+
+      Core.showToast(message);
+
+      return false;
+    }
+  }
   window.InneraClinicStaffActions = {
     openAddStaffModal,
     closeAddStaffModal,
     createStaffInvite,
     updateClinicStaffRole,
     disableClinicStaff,
-    enableClinicStaff
+    enableClinicStaff,
+    revokeStaffInvite
   };
 })();
