@@ -205,6 +205,186 @@
   color: #b91c1c;
 }
 
+.clinic-pending-invites-section {
+  margin-top: 24px;
+  padding: 24px;
+
+  background: #ffffff;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+}
+
+
+.pending-invite-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 24px;
+  height: 24px;
+  margin-left: 8px;
+  padding: 0 7px;
+
+  border-radius: 999px;
+
+  background: #eef4ff;
+  color: #426aa9;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  vertical-align: middle;
+}
+
+
+.clinic-pending-invites-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  margin-top: 20px;
+}
+
+
+.pending-invite-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  padding: 18px 20px;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+
+  background: #ffffff;
+}
+
+
+.pending-invite-card.expired {
+  background: #f8fafc;
+  opacity: 0.75;
+}
+
+
+.pending-invite-main {
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+
+  min-width: 0;
+}
+
+
+.pending-invite-avatar {
+  width: 44px;
+  height: 44px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #fff7e8;
+  color: #a66b18;
+
+  font-size: 17px;
+  font-weight: 700;
+}
+
+
+.pending-invite-info {
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+
+  min-width: 0;
+}
+
+
+.pending-invite-info strong {
+  font-size: 15px;
+  color: #172033;
+}
+
+
+.pending-invite-info span {
+  overflow: hidden;
+
+  color: #64748b;
+
+  font-size: 13px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+.pending-invite-meta {
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+
+  color: #64748b;
+
+  font-size: 13px;
+}
+
+
+.pending-invite-role {
+  padding: 5px 9px;
+
+  border-radius: 999px;
+
+  background: #f1f5f9;
+  color: #475569;
+
+  font-weight: 600;
+}
+
+
+.pending-invite-expiry {
+  white-space: nowrap;
+}
+
+
+.clinic-pending-invites-message {
+  padding: 24px 0;
+
+  color: #64748b;
+
+  text-align: center;
+}
+
+
+.clinic-pending-invites-message.error {
+  color: #b91c1c;
+}
+
+
+@media (max-width: 768px) {
+
+  .pending-invite-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .pending-invite-meta {
+    align-items: flex-start;
+    flex-direction: column;
+
+    gap: 8px;
+  }
+}
+
 @media (max-width: 1500px) {
   .clinic-management-page {
     width: calc(100% - 280px);

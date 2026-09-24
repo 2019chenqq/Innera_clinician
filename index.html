@@ -726,6 +726,60 @@
     ></div>
 
   </section>
+  <section
+  class="clinic-pending-invites-section"
+  id="clinicPendingInvitesSection"
+>
+  <div class="section-header">
+
+    <div>
+      <h2>
+        待接受邀請
+        <span
+          class="pending-invite-count"
+          id="pendingInviteCount"
+        >
+          0
+        </span>
+      </h2>
+
+      <p>
+        顯示已寄出但尚未完成院所帳號啟用的成員邀請。
+      </p>
+    </div>
+
+  </div>
+
+
+  <div
+    id="pendingInvitesLoading"
+    class="clinic-pending-invites-message"
+  >
+    正在讀取待接受邀請...
+  </div>
+
+
+  <div
+    id="pendingInvitesEmpty"
+    class="clinic-pending-invites-message hidden"
+  >
+    目前沒有待接受的成員邀請。
+  </div>
+
+
+  <div
+    id="pendingInvitesError"
+    class="clinic-pending-invites-message error hidden"
+  >
+    無法讀取待接受邀請。
+  </div>
+
+
+  <div
+    id="pendingInvitesList"
+    class="clinic-pending-invites-list"
+  ></div>
+</section>
 <section class="clinic-settings-section">
 
   <div class="section-header">
