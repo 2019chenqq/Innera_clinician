@@ -4,6 +4,12 @@
 
   const Core = window.InneraClinicCore;
 
+  const DEMO_CLINIC_ID = "lyuA5LbAHkgvgjn9y6oF";
+
+  function isDemoClinic(staff) {
+    return staff?.clinicId === DEMO_CLINIC_ID;
+  }
+
   let originalClinicSettings = null;
 
 
@@ -466,6 +472,12 @@
       return;
     }
 
+    if (isDemoClinic(currentStaff)) {
+      Core.showToast(
+        "展示環境不開放修改院所設定。"
+      );
+      return;
+    }
 
     originalClinicSettings = {
 

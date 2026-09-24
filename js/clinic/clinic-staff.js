@@ -19,19 +19,57 @@
   return roleLabels[staff.role] || staff.role || "院所人員";
 }
 
-function isStaffActive(staff) {
-  return !(
-    staff.active === false ||
-    staff.status === "inactive"
-  );
-}
+  function isStaffActive(staff) {
+    return !(
+      staff.active === false ||
+      staff.status === "inactive"
+    );
+  }
 
-function statusLabel(staff) {
-  return isStaffActive(staff)
-    ? "啟用中"
-    : "已停用";
-}
+  function statusLabel(staff) {
+    return isStaffActive(staff)
+      ? "啟用中"
+      : "已停用";
+  }
+  function getRoleLabel(role) {
+    const roleLabels = {
+      admin: "院所管理員",
+      clinic_admin: "院所管理員",
+      doctor: "醫師",
+      nurse: "護理人員",
+      staff: "行政人員"
+    };
 
+    return roleLabels[role] || role || "院所人員";
+  }
+
+  function roleMenuItems(selectedRole) {
+    const roles = [
+      ["admin", "院所管理員"],
+      ["doctor", "醫師"],
+      ["nurse", "護理人員"],
+      ["staff", "行政人員"]
+    ];
+
+    return roles
+      .map(([value, label]) => `
+        <button
+          type="button"
+          class="staff-role-option ${
+            value === selectedRole ? "selected" : ""
+          }"
+          data-role="${value}"
+        >
+          <span>${label}</span>
+          ${
+            value === selectedRole
+              ? '<i class="bi bi-check2"></i>'
+              : ""
+          }
+        </button>
+      `)
+      .join("");
+  }
   function renderStaffList(staffList) {
   const list = document.getElementById("clinicStaffList");
   const empty = document.getElementById("clinicStaffEmpty");
@@ -64,7 +102,13 @@ function statusLabel(staff) {
         isStaffActive(staff)
           ? "active"
           : "inactive";
+      const isCurrentUser =
+        currentStaff?.uid === staff.uid;
 
+      const canEditRole =
+        canManageStaff &&
+        !isCurrentUser &&
+        isStaffActive(staff);
       return `
         <article class="clinic-staff-card">
           <div class="clinic-staff-main">
@@ -78,7 +122,34 @@ function statusLabel(staff) {
             <div class="clinic-staff-meta">
               <span class="staff-meta-item">
                 <i class="bi bi-person-badge"></i>
-                ${roleLabel(staff)}
+                ${
+                  canEditRole
+                    ? `
+                      <div
+                        class="staff-role-dropdown"
+                        data-staff-uid="${staff.uid}"
+                        data-staff-name="${name}"
+                        data-original-role="${staff.role}"
+                      >
+                        <button
+                          type="button"
+                          class="staff-role-trigger"
+                          aria-expanded="false"
+                        >
+                          <span class="staff-role-trigger-label">
+                            ${getRoleLabel(staff.role)}
+                          </span>
+
+                          <i class="bi bi-chevron-down"></i>
+                        </button>
+
+                        <div class="staff-role-menu">
+                          ${roleMenuItems(staff.role)}
+                        </div>
+                      </div>
+                    `
+                    : roleLabel(staff)
+                }
               </span>
               <span class="staff-meta-item">
                 <i class="bi bi-hospital"></i>
@@ -88,29 +159,176 @@ function statusLabel(staff) {
                 ${statusLabel(staff)}
               </span>
             </div>
-            ${canManageStaff ? (
-  !isStaffActive(staff) ? `
-    <button
-      type="button"
-      class="staff-enable-button"
-      data-staff-uid="${staff.uid}"
-      data-staff-name="${name}">
-      啟用
-    </button>
-  ` : `
-    <button
-      type="button"
-      class="staff-disable-button"
-      data-staff-uid="${staff.uid}"
-      data-staff-name="${name}">
-      停用
-    </button>
-  `
-) : ""}
+            ${
+              canManageStaff && !isCurrentUser
+                ? (
+                    !isStaffActive(staff)
+                      ? `
+                        <button
+                          type="button"
+                          class="staff-enable-button"
+                          data-staff-uid="${staff.uid}"
+                          data-staff-name="${name}">
+                          啟用
+                        </button>
+                      `
+                      : `
+                        <button
+                          type="button"
+                          class="staff-disable-button"
+                          data-staff-uid="${staff.uid}"
+                          data-staff-name="${name}">
+                          停用
+                        </button>
+                      `
+                  )
+                : ""
+            }
           </div>
         </article>
       `;
     }).join("");
+    list
+      .querySelectorAll(".staff-role-dropdown")
+      .forEach((dropdown) => {
+
+        const trigger =
+          dropdown.querySelector(
+            ".staff-role-trigger"
+          );
+
+        const menu =
+          dropdown.querySelector(
+            ".staff-role-menu"
+          );
+
+        const label =
+          dropdown.querySelector(
+            ".staff-role-trigger-label"
+          );
+
+        if (!trigger || !menu || !label) {
+          return;
+        }
+
+        trigger.addEventListener(
+          "click",
+          (event) => {
+
+            event.stopPropagation();
+
+            document
+              .querySelectorAll(
+                ".staff-role-dropdown.open"
+              )
+              .forEach((otherDropdown) => {
+                if (otherDropdown !== dropdown) {
+                  otherDropdown.classList.remove("open");
+
+                  otherDropdown
+                    .querySelector(".staff-role-trigger")
+                    ?.setAttribute(
+                      "aria-expanded",
+                      "false"
+                    );
+                }
+              });
+
+            const isOpen =
+              dropdown.classList.toggle("open");
+
+            trigger.setAttribute(
+              "aria-expanded",
+              String(isOpen)
+            );
+          }
+        );
+
+        menu
+          .querySelectorAll(
+            ".staff-role-option"
+          )
+          .forEach((option) => {
+
+            option.addEventListener(
+              "click",
+              async (event) => {
+
+                event.stopPropagation();
+
+                const staffUid =
+                  dropdown.dataset.staffUid;
+
+                const staffName =
+                  dropdown.dataset.staffName ||
+                  "院所成員";
+
+                const originalRole =
+                  dropdown.dataset.originalRole;
+
+                const nextRole =
+                  option.dataset.role;
+
+                if (
+                  !staffUid ||
+                  !nextRole ||
+                  nextRole === originalRole
+                ) {
+                  dropdown.classList.remove("open");
+
+                  trigger.setAttribute(
+                    "aria-expanded",
+                    "false"
+                  );
+
+                  return;
+                }
+
+                dropdown.classList.remove("open");
+
+                trigger.setAttribute(
+                  "aria-expanded",
+                  "false"
+                );
+
+                trigger.disabled = true;
+
+                const success =
+                  await window
+                    .InneraClinicStaffActions
+                    .updateClinicStaffRole(
+                      staffUid,
+                      staffName,
+                      nextRole
+                    );
+
+                if (!success) {
+                  trigger.disabled = false;
+                }
+              }
+            );
+          });
+        });
+
+document.addEventListener(
+  "click",
+  () => {
+    document
+      .querySelectorAll(
+        ".staff-role-dropdown.open"
+      )
+      .forEach((dropdown) => {
+        dropdown.classList.remove("open");
+
+        dropdown
+          .querySelector(".staff-role-trigger")
+          ?.setAttribute(
+            "aria-expanded",
+            "false"
+          );
+      });
+  }
+);
   }
 
   async function loadClinicStaff() {
