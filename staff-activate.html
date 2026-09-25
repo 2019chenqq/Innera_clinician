@@ -12,16 +12,39 @@
   >
 
   <style>
-    * {
-      box-sizing: border-box;
+  :root {
+    --innera-primary: #5b78d4;
+    --innera-primary-dark: #3f5fbf;
+    --innera-deep: #1d2b4f;
+    --innera-bg: #f5f7fc;
+    --innera-card-border: #dbe5ff;
+    --innera-soft: #eef4ff;
+    --innera-soft-border: #d6e2ff;
+    --innera-text: #243454;
+    --innera-muted: #6f7fa6;
+    --innera-line: #e8eefb;
+    --innera-success-bg: #eef4ff;
+    --innera-success-text: #3f5fbf;
+    --innera-error-bg: #fff4f3;
+    --innera-error-text: #984b45;
+  }
+    input:focus {
+      border-color: var(--innera-primary);
+      box-shadow: 0 0 0 4px rgba(91, 120, 212, 0.12);
+    }
+    #activateStaffButton:hover {
+      background: #3f5fbf !important;
     }
 
+    #activateStaffButton:active {
+      transform: translateY(1px);
+    }
     body {
       margin: 0;
       min-height: 100vh;
       font-family: "Noto Sans TC", sans-serif;
-      background: #f5f8f8;
-      color: #263737;
+      background: var(--innera-bg);
+      color: var(--innera-text);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -31,10 +54,10 @@
     .activation-card {
       width: min(100%, 520px);
       background: #ffffff;
-      border: 1px solid #dde8e7;
+      border: 1px solid var(--innera-card-border);
       border-radius: 24px;
       padding: 36px;
-      box-shadow: 0 18px 50px rgba(37, 74, 72, 0.08);
+      box-shadow: 0 18px 50px rgba(37, 61, 122, 0.10);
     }
 
     .brand {
@@ -45,7 +68,7 @@
       width: 44px;
       height: 44px;
       border-radius: 14px;
-      background: #376f6c;
+      background: var(--innera-primary);
       color: white;
       display: grid;
       place-items: center;
@@ -56,7 +79,7 @@
 
     .eyebrow {
       margin: 0 0 6px;
-      color: #6e8886;
+      color: var(--innera-primary);
       font-size: 12px;
       font-weight: 700;
       letter-spacing: 0.12em;
@@ -65,14 +88,16 @@
     h1 {
       margin: 0;
       font-size: 26px;
+      color: var(--innera-deep);
     }
 
     .status-message {
       margin: 28px 0 0;
       padding: 18px;
-      background: #f2f7f6;
+      background: var(--innera-success-bg);
+      border: 1px solid var(--innera-soft-border);
       border-radius: 16px;
-      color: #536d6b;
+      color: var(--innera-success-text);
     }
 
     .invite-content {
@@ -87,11 +112,12 @@
     .clinic-name {
       margin: 0 0 8px;
       font-size: 22px;
+      color: var(--innera-deep);
     }
 
     .invite-description {
       margin: 0 0 24px;
-      color: #647977;
+      color: var(--innera-muted);
       line-height: 1.7;
     }
 
@@ -106,20 +132,22 @@
       justify-content: space-between;
       gap: 20px;
       padding: 14px 0;
-      border-bottom: 1px solid #edf2f1;
+      border-bottom: 1px solid var(--innera-line);
     }
 
     .invite-row span {
-      color: #778b89;
+      color: var(--innera-muted);
     }
 
     .invite-row strong {
       text-align: right;
+      color: var(--innera-deep);
     }
 
     .error {
-      background: #fff4f3;
-      color: #984b45;
+      background: var(--innera-error-bg);
+      color: var(--innera-error-text);
+      border: 1px solid #f3d4d1;
     }
 
     @media (max-width: 540px) {
@@ -199,7 +227,7 @@
             display: none;
             margin-top: 28px;
             padding-top: 24px;
-            border-top: 1px solid #edf2f1;
+            border-top: 1px solid #e8eefb;
         "
         >
         <h3 style="margin: 0 0 8px;">
@@ -209,7 +237,7 @@
         <p
             style="
             margin: 0 0 18px;
-            color: #647977;
+            color: #6f7fa6;
             line-height: 1.7;
             "
         >
@@ -236,7 +264,7 @@
             style="
             width: 100%;
             height: 48px;
-            border: 1px solid #d9e4e3;
+            border: 1px solid #dbe5ff;
             border-radius: 12px;
             padding: 0 14px;
             font: inherit;
@@ -264,7 +292,7 @@
             style="
             width: 100%;
             height: 48px;
-            border: 1px solid #d9e4e3;
+            border: 1px solid #dbe5ff;
             border-radius: 12px;
             padding: 0 14px;
             font: inherit;
@@ -281,7 +309,8 @@
             margin-top: 20px;
             border: 0;
             border-radius: 12px;
-            background: #376f6c;
+            background: #5b78d4;
+            transition: background 0.2s ease, transform 0.2s ease;
             color: white;
             font: inherit;
             font-weight: 600;

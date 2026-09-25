@@ -43,12 +43,12 @@
     message.style.background =
         isError
         ? "#fff4f3"
-        : "#f2f7f6";
+        : "#eef4ff";
 
     message.style.color =
         isError
         ? "#984b45"
-        : "#536d6b";
+        : "#3f5fbf";
     }
 
     function showPasswordSetupIfReady() {
