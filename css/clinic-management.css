@@ -355,6 +355,27 @@
   white-space: nowrap;
 }
 
+.pending-invite-resend-button {
+  min-height: 34px;
+  padding: 0 12px;
+
+  border: 1px solid #c9d7ee;
+  border-radius: 8px;
+
+  background: #f4f7fc;
+  color: #426aa9;
+
+  cursor: pointer;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+
+.pending-invite-resend-button:hover {
+  background: #eaf0f9;
+}
+
 .pending-invite-revoke-button {
   min-height: 34px;
   padding: 0 12px;

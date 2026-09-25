@@ -166,7 +166,14 @@ function renderPendingInvites(invites) {
             <span class="pending-invite-expiry">
               ${expiryText}
             </span>
-
+            <button
+              type="button"
+              class="pending-invite-resend-button"
+              data-invite-id="${invite.inviteId}"
+              data-invite-name="${invite.displayName || "此成員"}"
+            >
+              重新寄送
+            </button>
             <button
               type="button"
               class="pending-invite-revoke-button"
@@ -277,17 +284,31 @@ async function loadPendingInvites() {
         "click",
         (event) => {
 
-          const button =
+          const resendButton =
+            event.target.closest(
+              ".pending-invite-resend-button"
+            );
+
+          if (resendButton) {
+            Actions.resendStaffInvite(
+              resendButton.dataset.inviteId,
+              resendButton.dataset.inviteName || "此成員"
+            );
+            return;
+          }
+
+
+          const revokeButton =
             event.target.closest(
               ".pending-invite-revoke-button"
             );
 
-          if (!button) return;
-
-          Actions.revokeStaffInvite(
-            button.dataset.inviteId,
-            button.dataset.inviteName || "此成員"
-          );
+          if (revokeButton) {
+            Actions.revokeStaffInvite(
+              revokeButton.dataset.inviteId,
+              revokeButton.dataset.inviteName || "此成員"
+            );
+          }
         }
       );
 

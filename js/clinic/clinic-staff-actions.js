@@ -487,6 +487,172 @@ async function updateClinicStaffRole(
       Core.showToast(message);
     }
   }
+
+  async function resendStaffInvite(
+    inviteId,
+    inviteName
+  ) {
+
+    const currentStaff =
+      Core.getCurrentStaff();
+
+    if (!currentStaff) return false;
+
+
+    if (!isClinicAdmin(currentStaff)) {
+      Core.showToast(
+        "只有院所管理員可以重新寄送邀請"
+      );
+      return false;
+    }
+
+
+    if (isDemoClinic(currentStaff)) {
+      Core.showToast(
+        "展示環境不開放重新寄送成員邀請。"
+      );
+      return false;
+    }
+
+
+    if (
+      !window.confirm(
+        `確定要重新寄送 ${inviteName} 的邀請嗎？舊連結將立即失效。`
+      )
+    ) {
+      return false;
+    }
+
+
+    try {
+
+      const resendFn =
+        firebase
+          .app()
+          .functions("us-central1")
+          .httpsCallable(
+            "resendStaffInvite"
+          );
+
+
+      const result =
+        await resendFn({
+          inviteId
+        });
+
+
+      const email =
+        result.data?.email;
+
+      const inviteToken =
+        result.data?.token;
+
+
+      if (!email || !inviteToken) {
+        throw new Error(
+          "重新產生邀請成功，但缺少寄送資料。"
+        );
+      }
+
+
+      const activationUrl =
+        new URL(
+          "https://2019chenqq.github.io/Innera_clinician/staff-activate.html"
+        );
+
+
+      activationUrl.searchParams.set(
+        "invite",
+        inviteId
+      );
+
+      activationUrl.searchParams.set(
+        "token",
+        inviteToken
+      );
+
+
+      const actionCodeSettings = {
+        url: activationUrl.toString(),
+        handleCodeInApp: true
+      };
+
+
+      await firebase
+        .auth()
+        .sendSignInLinkToEmail(
+          email,
+          actionCodeSettings
+        );
+
+
+      Core.showToast(
+        `${inviteName} 的邀請已重新寄送`
+      );
+
+
+      await window
+        .InneraClinicManagement
+        ?.loadPendingInvites();
+
+
+      return true;
+
+
+    } catch (error) {
+
+      console.error(
+        "[Innera] 重新寄送成員邀請失敗",
+        error
+      );
+
+
+      let message =
+        "重新寄送成員邀請失敗";
+
+
+      if (
+        error.code ===
+        "functions/permission-denied"
+      ) {
+        message =
+          "你沒有重新寄送這份邀請的權限";
+      }
+
+
+      if (
+        error.code ===
+        "functions/failed-precondition"
+      ) {
+        message =
+          "這份邀請目前無法重新寄送";
+      }
+
+
+      if (
+        error.code ===
+        "functions/not-found"
+      ) {
+        message =
+          "找不到這份邀請";
+      }
+
+
+      if (
+        error.code ===
+        "auth/unauthorized-continue-uri"
+      ) {
+        message =
+          "邀請網址尚未加入 Firebase Authorized Domains";
+      }
+
+
+      Core.showToast(message);
+
+      return false;
+    }
+  }
+
   async function revokeStaffInvite(
     inviteId,
     inviteName
@@ -603,6 +769,7 @@ async function updateClinicStaffRole(
     updateClinicStaffRole,
     disableClinicStaff,
     enableClinicStaff,
+    resendStaffInvite,
     revokeStaffInvite
   };
 })();
