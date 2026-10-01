@@ -11,9 +11,10 @@ const Timestamp = admin.firestore.Timestamp;
 const SERVER_TS = admin.firestore.FieldValue.serverTimestamp();
 
 // FILL THESE BEFORE RUNNING
-const DEMO_UID = "jRhIarbL68XoK8Vn5bYWemSaSAr2";
+const DEMO_UID = "LoRfGVtuzHU5V6qwOL4XzbHhRZK2";
 const DEMO_CLINIC_ID = "lyuA5LbAHkgvgjn9y6oF";
-const DEMO_PATIENT_ID = "P000004";
+const DEMO_PATIENT_ID = "P000005";
+const DEMO_PATIENT_NAME = "林○安";
 
 function assertConfigured() {
   for (const [key, value] of Object.entries({
@@ -105,68 +106,97 @@ function sleepQuality(hours) {
 
 function healthEventsForDates(dates) {
   const events = [
-    [17, "工作後", "最近事情比較多，但目前還能應付。",
-      [{ name: "焦慮", intensity: 3 }, { name: "疲憊", intensity: 3 }],
-      [{ name: "注意力下降", intensity: 2 }], { energy: 3, activity: 3, appetite: 3 }],
-    [11, "睡前", "躺下後腦袋一直想隔天的事情，較難放鬆。",
+    [
+      12,
+      "工作後",
+      "今天比較疲累，下班後想休息。",
+      [{ name: "疲憊", intensity: 3 }],
+      [{ name: "活動量下降", intensity: 3 }],
+      { energy: 3, activity: 3, appetite: 3 }
+    ],
+    [
+      8,
+      "重要事件",
+      "今天工作量增加，情緒比較緊繃。",
       [{ name: "焦慮", intensity: 4 }],
-      [{ name: "反覆思考", intensity: 4 }, { name: "入睡困難", intensity: 3 }], { energy: 3, activity: 3, appetite: 3 }],
-    [8, "工作中", "同一件事情需要重看幾次才能完成。",
-      [{ name: "煩躁", intensity: 4 }, { name: "焦慮", intensity: 4 }],
-      [{ name: "專注下降", intensity: 4 }], { energy: 2, activity: 3, appetite: 3 }],
-    [5, "重要事件", "臨時增加新的工作任務，擔心無法完成。",
-      [{ name: "緊張", intensity: 5 }, { name: "焦慮", intensity: 4 }],
-      [{ name: "心悸", intensity: 3 }, { name: "反覆思考", intensity: 4 }], { energy: 2, activity: 2, appetite: 3 }],
-    [3, "休息中", "下班後幾乎沒有力氣做其他事情。",
-      [{ name: "疲憊", intensity: 4 }, { name: "低落", intensity: 3 }],
-      [{ name: "活動量下降", intensity: 4 }], { energy: 2, activity: 2, appetite: 3 }],
-    [1, "睡前", "今天比前幾天稍微平靜一些，入睡前仍有些反覆思考。",
-      [{ name: "焦慮", intensity: 3 }],
-      [{ name: "反覆思考", intensity: 3 }], { energy: 3, activity: 3, appetite: 3 }]
+      [{ name: "心悸", intensity: 2 }],
+      { energy: 3, activity: 3, appetite: 3 }
+    ],
+    [
+      5,
+      "休息中",
+      "下班後比較累，今天沒有特別安排活動。",
+      [{ name: "疲憊", intensity: 4 }],
+      [{ name: "活動量下降", intensity: 4 }],
+      { energy: 2, activity: 2, appetite: 3 }
+    ],
+    [
+      2,
+      "工作後",
+      "今天情緒比較低，回家後想先休息。",
+      [{ name: "低落", intensity: 3 }],
+      [{ name: "疲倦", intensity: 3 }],
+      { energy: 2, activity: 2, appetite: 3 }
+    ]
   ];
 
-  return events.map(([daysAgo, context, note, emotions, symptoms, stateChanges]) => {
-    const date = dates[dates.length - 1 - daysAgo];
-    const ts = atLocalTime(date, daysAgo <= 3 ? 21 : 19, 30);
-    return {
-      id: `demo-${dateId(date)}-${daysAgo}`,
-      data: {
-        timestamp: toTimestamp(ts),
-        emotions,
-        symptoms,
-        stateChanges,
-        context,
-        note,
-        updatedAt: toTimestamp(ts),
-        source: "demo_seed",
-        shareVersion: 1
-      }
-    };
-  });
+  return events.map(
+    ([daysAgo, context, note, emotions, symptoms, stateChanges]) => {
+      const date = dates[dates.length - 1 - daysAgo];
+      const ts = atLocalTime(date, 19, 30);
+
+      return {
+        id: `demo-${dateId(date)}-${daysAgo}`,
+        data: {
+          timestamp: toTimestamp(ts),
+          emotions,
+          symptoms,
+          stateChanges,
+          context,
+          note,
+          updatedAt: toTimestamp(ts),
+          source: "demo_seed",
+          shareVersion: 1
+        }
+      };
+    }
+  );
 }
 
-async function verifyDemoPatient() {
+async function ensureDemoPatient() {
   const ref = db.collection("inneraPatients").doc(DEMO_PATIENT_ID);
+
+  await ref.set({
+    patientId: DEMO_PATIENT_ID,
+    legalName: DEMO_PATIENT_NAME,
+    clinicId: DEMO_CLINIC_ID,
+    firebaseUid: DEMO_UID,
+
+    linked: true,
+    active: true,
+
+    todayAppointment: true,
+    queueNumber: 5,
+    appointmentSession: "afternoon",
+    appointmentTime: "15:00",
+    visitType: "複診",
+
+    source: "demo_seed",
+    updatedAt: SERVER_TS
+  }, { merge: true });
+
   const snap = await ref.get();
-  if (!snap.exists) throw new Error(`找不到 inneraPatients/${DEMO_PATIENT_ID}`);
 
-  const data = snap.data();
-  if (String(data.clinicId || "") !== DEMO_CLINIC_ID) {
-    throw new Error(`clinicId 不符：Firestore=${data.clinicId}, 設定=${DEMO_CLINIC_ID}`);
-  }
-  if (String(data.firebaseUid || "") !== DEMO_UID) {
-    throw new Error(`firebaseUid 不符：Firestore=${data.firebaseUid}, 設定=${DEMO_UID}`);
-  }
-  if (data.linked !== true) {
-    throw new Error(`inneraPatients/${DEMO_PATIENT_ID} 尚未 linked=true`);
+  if (!snap.exists) {
+    throw new Error(`建立 ${DEMO_PATIENT_ID} 失敗`);
   }
 
-  return data;
+  return snap.data();
 }
 
 async function seed() {
   assertConfigured();
-  const patient = await verifyDemoPatient();
+  const patient = await ensureDemoPatient();
 
   const clinicShareRef = db
     .collection("clinicalShares")
