@@ -739,3 +739,11 @@
     max-width: 100%;
   }
 }
+
+.clinical-source-note {
+  margin-top: 6px;
+  color: #8a95a7;
+  font-size: 11px;
+  line-height: 1.5;
+  font-weight: 600;
+}

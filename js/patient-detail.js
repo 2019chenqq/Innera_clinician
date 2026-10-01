@@ -51,13 +51,6 @@ function getClinicalDemoData(patient) {
         summary: `能量 ${energy}，活動量較近期基準下降`,
         indicators: ["能量", "活動量", "睡眠需求"]
       },
-      cognition: {
-        label: "Cognition",
-        status: "⚠ 需確認",
-        tone: "watch",
-        summary: "文字紀錄提及反覆思考與專注下降",
-        indicators: ["思緒速度", "專注", "反覆思考"]
-      },
       mood: {
         label: "Mood",
         status: "↑ 波動增加",
@@ -76,7 +69,6 @@ function getClinicalDemoData(patient) {
     pattern: {
       dates: ["09/13", "09/14", "09/15", "09/16", "09/17", "09/18", "09/19"],
       drive: ["→", "→", "↗", "↗", "↑", "→", "→"],
-      cognition: ["穩定", "反覆思考", "專注↓", "專注↓", "思緒較多", "思緒較多", "穩定"],
       mood: ["→", "↘", "↘", "波動", "波動", "↗", "→"],
       behavior: ["→", "→", "↘", "↘", "外出↓", "活動↓", "→"]
     },
@@ -474,7 +466,7 @@ function ensureClinicalSections() {
       <div class="clinical-period-heading">
         <div>
           <h3>期間變化</h3>
-          <p class="clinical-section-copy">整合 Drive、Cognition、Mood、Behavior 與睡眠，快速掌握本次回診前的整體變化。</p>
+          <p class="clinical-section-copy">整理近期有足夠資料支持的面向，快速掌握本次回診前的重要變化。</p>
         </div>
         <span class="clinical-period-badge">近 30 日</span>
       </div>
@@ -514,68 +506,106 @@ function ensureClinicalSections() {
   return root;
 }
 
-
 function renderClinicalPeriodSummary(patient, clinical) {
   const target = document.getElementById("clinicalPeriodSummary");
   if (!target) return;
 
   const domains = clinical?.domains || {};
-  const sleepText =
-    formatDetailAverageSleep(patient?.quick?.sleep ?? patient?.sleep ?? "目前沒有足夠睡眠資料");
 
-  const rows = [
-    {
-      name: "Drive",
-      status: domains.drive?.status || "資料不足",
-      tone: domains.drive?.tone || "",
-      copy: domains.drive?.summary || "目前沒有足夠資料"
-    },
-    {
-      name: "Cognition",
-      status: domains.cognition?.status || "資料不足",
-      tone: domains.cognition?.tone || "",
-      copy: domains.cognition?.summary || "目前沒有足夠資料"
-    },
-    {
-      name: "Mood",
-      status: domains.mood?.status || "資料不足",
-      tone: domains.mood?.tone || "",
-      copy: domains.mood?.summary || "目前沒有足夠資料"
-    },
-    {
-      name: "Behavior",
-      status: domains.behavior?.status || "資料不足",
-      tone: domains.behavior?.tone || "",
-      copy: domains.behavior?.summary || "目前沒有足夠資料"
-    },
-    {
-      name: "Sleep",
-      status: domains.sleep?.status || (patient?.sleepSub?.includes("下降") ? "↓ 下降" : "近期變化"),
-      tone: domains.sleep ? "" : (patient?.sleepSub?.includes("下降") ? "down" : "stable"),
-      copy: domains.sleep?.summary || `平均睡眠 ${sleepText}；${patient?.sleepSub || "持續觀察近期睡眠變化"}`
-    }
+  const domainConfig = [
+    ["drive", "Drive"],
+    ["cognition", "Cognition"],
+    ["mood", "Mood"],
+    ["behavior", "Behavior"],
+    ["sleep", "Sleep"]
   ];
+
+  const rows = domainConfig
+    .map(([key, name]) => {
+      const domain = domains[key];
+
+      // 沒有 AI 支持資料 → 不顯示
+      if (!domain || typeof domain !== "object") {
+        return null;
+      }
+
+      // 防止舊資料中的「資料不足」仍佔一列
+      const status = String(domain.status || "").trim();
+      const summary = String(domain.summary || "").trim();
+
+      if (
+        !summary ||
+        status === "資料不足" ||
+        summary === "目前沒有足夠資料"
+      ) {
+        return null;
+      }
+
+      const sourceType = domain.sourceType || "structured";
+
+      return {
+        key,
+        name,
+        status: status || "近期紀錄",
+        tone: domain.tone || "",
+        copy: summary,
+        sourceType
+      };
+    })
+    .filter(Boolean);
 
   const overallPattern =
     patient?.aiSummary?.patternSummary ||
     patient?.clinicalPatternSummary ||
-    "睡眠、情緒、驅力與行為的變化可搭配近期重要事件一起閱讀，協助判斷是否出現同步或連續變化。";
+    "";
+
+  if (!rows.length) {
+    target.innerHTML = `
+      <div class="empty-detail-block">
+        <strong>目前沒有足夠資料可整理期間變化</strong>
+        <p>有紀錄的面向才會顯示，不會以 AI 推論補足缺少的資料。</p>
+      </div>
+    `;
+    return;
+  }
 
   target.innerHTML = `
     ${rows.map((row) => `
       <div class="clinical-period-row">
-        <div class="clinical-period-name">${escapeClinicalText(row.name)}</div>
+        <div class="clinical-period-name">
+          ${escapeClinicalText(row.name)}
+        </div>
+
         <div class="clinical-period-status ${escapeClinicalText(row.tone || "")}">
           ${escapeClinicalText(row.status)}
         </div>
-        <div class="clinical-period-copy">${escapeClinicalText(row.copy)}</div>
+
+        <div class="clinical-period-copy">
+          ${escapeClinicalText(row.copy)}
+
+          ${
+            row.sourceType === "text_signal"
+              ? `
+                <div class="clinical-source-note">
+                  文字紀錄線索 / AI 整理，非結構化量測
+                </div>
+              `
+              : ""
+          }
+        </div>
       </div>
     `).join("")}
 
-    <div class="clinical-pattern-insight">
-      <span>整體 pattern</span>
-      <strong>${escapeClinicalText(overallPattern)}</strong>
-    </div>
+    ${
+      overallPattern
+        ? `
+          <div class="clinical-pattern-insight">
+            <span>整體 pattern</span>
+            <strong>${escapeClinicalText(overallPattern)}</strong>
+          </div>
+        `
+        : ""
+    }
   `;
 }
 
