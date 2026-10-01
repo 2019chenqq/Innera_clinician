@@ -367,7 +367,7 @@
         <div class="table-header">
             <div>個案</div>
             <div>目前狀態</div>
-            <div>近 7 日情緒</div>
+            <div>近期情緒</div>
             <div>睡眠</div>
             <div>近期變化</div>
             <div>最後更新</div>
@@ -439,7 +439,7 @@
 
     <section class="drawer-section">
 
-      <h3>近 7 日摘要</h3>
+      <h3>近期摘要</h3>
 
       <div class="drawer-grid">
 
@@ -1207,7 +1207,100 @@
             required
             >
       </div>
+      <div class="form-group appointment-toggle-group">
+      <label class="appointment-toggle">
+        <input
+          type="checkbox"
+          id="newPatientTodayAppointment"
+        >
+        <span>加入今日門診</span>
+      </label>
+    </div>
 
+    <div id="newPatientAppointmentFields" hidden>
+
+      <div class="form-group">
+        <label>診別</label>
+
+        <div
+          class="appointment-session-dropdown"
+          id="newPatientAppointmentSessionDropdown"
+        >
+          <input
+            type="hidden"
+            id="newPatientAppointmentSession"
+            value="morning"
+          >
+
+          <button
+            type="button"
+            class="appointment-session-trigger"
+            aria-expanded="false"
+          >
+            <span class="appointment-session-trigger-label">
+              早診
+            </span>
+
+            <i class="bi bi-chevron-down"></i>
+          </button>
+
+          <div class="appointment-session-menu">
+
+            <button
+              type="button"
+              class="appointment-session-option selected"
+              data-session="morning"
+            >
+              <span>早診</span>
+              <i class="bi bi-check2"></i>
+            </button>
+
+            <button
+              type="button"
+              class="appointment-session-option"
+              data-session="afternoon"
+            >
+              <span>下午診</span>
+            </button>
+
+            <button
+              type="button"
+              class="appointment-session-option"
+              data-session="evening"
+            >
+              <span>晚診</span>
+            </button>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="newPatientAppointmentTime">
+          掛號時間
+        </label>
+
+        <input
+          type="time"
+          id="newPatientAppointmentTime"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="newPatientQueueNumber">
+          叫號
+        </label>
+
+        <input
+          type="number"
+          id="newPatientQueueNumber"
+          min="1"
+          step="1"
+          placeholder="例如：12"
+        >
+      </div>
+
+    </div>
       <div class="modal-actions">
 
         <button
@@ -1233,7 +1326,198 @@
 
 </div>
 
+<!-- =========================
+     Add Today Appointment Modal
+========================= -->
 
+<div class="modal-overlay" id="addTodayAppointmentModal">
+
+  <div class="modal-card">
+
+    <div class="modal-header">
+
+      <div>
+        <h2>加入今日門診</h2>
+        <p id="addTodayAppointmentPatientName">個案</p>
+      </div>
+
+      <button
+        type="button"
+        class="icon-button"
+        id="closeAddTodayAppointmentModal"
+      >
+        ×
+      </button>
+
+    </div>
+
+    <form id="addTodayAppointmentForm">
+
+      <div class="form-group">
+        <label>診別</label>
+
+        <div
+          class="appointment-session-dropdown"
+          id="todayAppointmentSessionDropdown"
+        >
+
+          <input
+            type="hidden"
+            id="todayAppointmentSession"
+            value="morning"
+          >
+
+          <button
+            type="button"
+            class="appointment-session-trigger"
+            aria-expanded="false"
+          >
+            <span class="appointment-session-trigger-label">
+              早診
+            </span>
+
+            <i class="bi bi-chevron-down"></i>
+          </button>
+
+          <div class="appointment-session-menu">
+
+            <button
+              type="button"
+              class="appointment-session-option selected"
+              data-session="morning"
+            >
+              <span>早診</span>
+              <i class="bi bi-check2"></i>
+            </button>
+
+            <button
+              type="button"
+              class="appointment-session-option"
+              data-session="afternoon"
+            >
+              <span>下午診</span>
+            </button>
+
+            <button
+              type="button"
+              class="appointment-session-option"
+              data-session="evening"
+            >
+              <span>晚診</span>
+            </button>
+
+          </div>
+
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="todayAppointmentTime">
+          掛號時間
+        </label>
+
+        <input
+          type="time"
+          id="todayAppointmentTime"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="todayAppointmentQueueNumber">
+          叫號
+        </label>
+
+        <input
+          type="number"
+          id="todayAppointmentQueueNumber"
+          min="1"
+          step="1"
+          placeholder="例如：12"
+        >
+      </div>
+
+      <div class="modal-actions">
+
+        <button
+          type="button"
+          class="secondary-action"
+          id="cancelAddTodayAppointment"
+        >
+          取消
+        </button>
+
+        <button
+          type="submit"
+          class="primary-action"
+        >
+          加入今日門診
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+</div>
+
+<!-- =========================
+     Remove Today Appointment Modal
+========================= -->
+
+<div
+  class="modal-overlay"
+  id="removeTodayAppointmentModal"
+>
+  <div class="modal-card">
+
+    <div class="modal-header">
+      <div>
+        <h2>移出今日門診</h2>
+
+        <p id="removeTodayAppointmentPatientName">
+          個案
+        </p>
+      </div>
+
+      <button
+        type="button"
+        class="icon-button"
+        id="closeRemoveTodayAppointmentModal"
+      >
+        ×
+      </button>
+    </div>
+
+    <div class="invite-content">
+      <p>
+        確定要將此個案移出今日門診嗎？
+        移出後，個案仍會保留在「所有個案」中。
+      </p>
+    </div>
+
+    <div class="modal-actions">
+
+      <button
+        type="button"
+        class="secondary-action"
+        id="cancelRemoveTodayAppointment"
+      >
+        取消
+      </button>
+
+      <button
+        type="button"
+        class="primary-action"
+        id="confirmRemoveTodayAppointment"
+      >
+        確認移出
+      </button>
+
+    </div>
+
+  </div>
+</div>
 
 <!-- =========================
      Invite Modal

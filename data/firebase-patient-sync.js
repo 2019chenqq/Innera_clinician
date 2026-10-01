@@ -65,27 +65,60 @@
   }
 
   function firestorePatientToUi(data, docId) {
-    const linked = data.linked === true;
-    // MVP：只有有效正整數叫號才視為今日有掛號。
-    const queueNumber = typeof data.queueNumber === "number" || typeof data.queueNumber === "string"
+  const linked = data.linked === true;
+
+  const rawQueueNumber =
+    typeof data.queueNumber === "number" ||
+    typeof data.queueNumber === "string"
       ? Number(data.queueNumber)
       : NaN;
-    const hasAppointment = Number.isInteger(queueNumber) && queueNumber > 0;
+
+  const queueNumber =
+    Number.isInteger(rawQueueNumber) && rawQueueNumber > 0
+      ? rawQueueNumber
+      : null;
+
+  // P1 appointment model：
+  // 目前 Firestore 尚未正式提供 todayAppointment，
+  // 先沿用 queueNumber 作為舊資料 fallback。
+  const todayAppointment =
+    typeof data.todayAppointment === "boolean"
+      ? data.todayAppointment
+      : queueNumber !== null;
+
+  const appointmentDate =
+    safeString(
+      data.appointmentDate,
+      ""
+    );
+
+  const appointmentSession =
+    safeString(
+      data.appointmentSession,
+      safeString(data.visitType, "")
+    );
+
+  const appointmentTime =
+    safeString(
+      data.appointmentTime,
+      safeString(data.registrationTime, "")
+    );
 
     return {
       id: safeString(data.patientId, docId),
       fullName: safeString(data.legalName, "未命名個案"),
 
-      queueNumber:
-        hasAppointment ? queueNumber : null,
+      // P1：統一的門診 / 掛號欄位
+      todayAppointment,
+      appointmentDate,
+      appointmentSession,
+      appointmentTime,
+      queueNumber,
 
-      registrationTime:
-        safeString(data.registrationTime, ""),
-
-      visitType:
-        safeString(data.visitType, ""),
-
-      hasAppointment,
+      // 舊欄位暫時保留，避免 dashboard 尚未改版前壞掉。
+      hasAppointment: todayAppointment,
+      registrationTime: appointmentTime,
+      visitType: appointmentSession,
 
       linked,
       attention: data.attention === true,

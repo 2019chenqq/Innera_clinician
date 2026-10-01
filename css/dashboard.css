@@ -600,15 +600,12 @@ a {
   display: grid;
 
   grid-template-columns:
-    1.7fr
-    1fr
-    1fr
-    1fr
-    1.4fr
-    0.9fr
-    0.9fr;
-
-  gap: 24px;
+  minmax(0, 1.9fr)
+  minmax(0, 1fr)
+  repeat(3, minmax(0, 1.35fr))
+  minmax(0, 0.75fr)
+  130px;
+  gap: 20px;
 
   align-items: center;
 }
@@ -626,6 +623,22 @@ a {
   font-weight: 600;
 
   letter-spacing: 0.2px;
+}
+
+.table-header > div:first-child,
+.patient-row > div:first-child {
+  justify-self: start;
+}
+
+.table-header > div:nth-child(n+2):nth-child(-n+6),
+.patient-row > div:nth-child(n+2):nth-child(-n+6) {
+  justify-self: center;
+  text-align: center;
+}
+
+.table-header > div:last-child,
+.patient-row > div:last-child {
+  justify-self: end;
 }
 
 .patient-row {
@@ -854,13 +867,24 @@ a {
   font-size: 14px;
 }
 
+.updated-time {
+  text-align: center;
+}
+
 
 /* ==============================
    Row actions
 ============================== */
 
 .row-action {
-  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+
+  gap: 7px;
+
+  white-space: nowrap;
 }
 
 .view-button {
@@ -1101,4 +1125,110 @@ a {
   .filter-tab {
     white-space: nowrap;
   }
+}
+
+.add-to-today-button,
+.connect-button,
+.view-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 36px;
+  padding: 0 12px;
+
+  border-radius: 8px;
+
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+
+  white-space: nowrap;
+  text-decoration: none;
+
+  cursor: pointer;
+}
+
+.add-to-today-button {
+  border: 1px solid var(--primary);
+  background: #ffffff;
+  color: var(--primary);
+}
+
+.add-to-today-button:hover {
+  background: #f3f7fd;
+}
+
+.connect-button {
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: var(--text-secondary);
+}
+
+.view-button {
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+}
+
+.action-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 110px;
+  height: 36px;
+  padding: 0 9px;
+
+  border-radius: 9px;
+  border: 1px solid transparent;
+
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+
+  box-sizing: border-box;
+}
+
+.action-pill-primary {
+  background: #ffffff;
+  color: #4f76b8;
+  border-color: #4f76b8;
+  cursor: pointer;
+}
+
+.action-pill-primary:hover {
+  background: #f5f9ff;
+}
+
+.action-pill-secondary {
+  background: #ffffff;
+  color: #5f6f86;
+  border-color: #d8e0eb;
+  cursor: pointer;
+}
+
+.action-pill-secondary:hover {
+  background: #f8fafc;
+}
+
+.action-pill-danger {
+  background: #ffffff;
+  color: #c85b5b;
+  border-color: #e7b9b9;
+  cursor: pointer;
+}
+
+.action-pill-danger:hover {
+  background: #fff5f5;
+}
+
+.action-pill-disabled {
+  background: #f4f6f8;
+  color: #94a0b2;
+  border-color: #e3e8ef;
+  cursor: default;
+  pointer-events: none;
 }

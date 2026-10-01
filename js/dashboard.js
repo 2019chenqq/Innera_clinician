@@ -2,13 +2,64 @@
 
 let currentPatientView = "today";
 
+function getCurrentTaipeiDate() {
+  const parts =
+    new Intl.DateTimeFormat(
+      "en-CA",
+      {
+        timeZone: "Asia/Taipei",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }
+    ).formatToParts(new Date());
+
+  const values =
+    Object.fromEntries(
+      parts.map(({ type, value }) => [type, value])
+    );
+
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
 function hasTodayAppointment(patient) {
-  if (typeof patient.hasAppointment === "boolean") return patient.hasAppointment;
-  // Demo 資料未提供 hasAppointment，沿用有效叫號判定。
-  const queueNumber = typeof patient.queueNumber === "number" || typeof patient.queueNumber === "string"
-    ? Number(patient.queueNumber)
-    : NaN;
-  return Number.isInteger(queueNumber) && queueNumber > 0;
+  const appointmentDate =
+    typeof patient.appointmentDate === "string"
+      ? patient.appointmentDate.trim()
+      : "";
+
+  // 新資料：只在掛號啟用，而且日期確實是今天時，
+  // 才算「今日門診」。
+  if (appointmentDate) {
+    return (
+      patient.todayAppointment === true &&
+      appointmentDate === getCurrentTaipeiDate()
+    );
+  }
+
+  // 舊資料相容：
+  // 沒有 appointmentDate 的既有資料，
+  // 暫時沿用 todayAppointment。
+  if (typeof patient.todayAppointment === "boolean") {
+    return patient.todayAppointment;
+  }
+
+  // 更舊資料仍可讀 hasAppointment。
+  if (typeof patient.hasAppointment === "boolean") {
+    return patient.hasAppointment;
+  }
+
+  // 最後 fallback：Demo / 舊資料若只有叫號。
+  const queueNumber =
+    typeof patient.queueNumber === "number" ||
+    typeof patient.queueNumber === "string"
+      ? Number(patient.queueNumber)
+      : NaN;
+
+  return (
+    Number.isInteger(queueNumber) &&
+    queueNumber > 0
+  );
 }
 
 function getVisiblePatients() {
@@ -30,15 +81,30 @@ function renderPatients() {
   patientList.innerHTML = "";
 
   const sortedPatients = [...getVisiblePatients()].sort((a, b) => {
-    const queueA = hasTodayAppointment(a) && Number.isFinite(Number(a.queueNumber))
+  // 今日門診：已連結心域的個案優先。
+  if (currentPatientView === "today") {
+    const linkedA = a.linked === true ? 0 : 1;
+    const linkedB = b.linked === true ? 0 : 1;
+
+    if (linkedA !== linkedB) {
+      return linkedA - linkedB;
+    }
+  }
+
+  const queueA =
+    hasTodayAppointment(a) &&
+    Number.isFinite(Number(a.queueNumber))
       ? Number(a.queueNumber)
       : Number.MAX_SAFE_INTEGER;
-    const queueB = hasTodayAppointment(b) && Number.isFinite(Number(b.queueNumber))
+
+  const queueB =
+    hasTodayAppointment(b) &&
+    Number.isFinite(Number(b.queueNumber))
       ? Number(b.queueNumber)
       : Number.MAX_SAFE_INTEGER;
 
-    return queueA - queueB;
-  });
+  return queueA - queueB;
+});
 
   sortedPatients.forEach((patient) => {
     const row = document.createElement("article");
@@ -55,9 +121,58 @@ function renderPatients() {
 
     const displayName = maskPatientName(patient.fullName);
     const hasAppointment = hasTodayAppointment(patient);
-    const queueHtml = hasAppointment ? `<span class="queue-number">${patient.queueNumber}號</span>` : "";
+    const appointmentActionHtml =
+  currentPatientView === "today"
+    ? `
+      <button
+        type="button"
+        class="remove-from-today-button action-pill action-pill-danger"
+        data-patient-id="${patient.id}"
+      >
+        移出今日門診
+      </button>
+    `
+    : hasAppointment
+      ? `
+        <span class="action-pill action-pill-disabled">
+          已掛號
+        </span>
+      `
+      : `
+        <button
+          type="button"
+          class="add-to-today-button action-pill action-pill-primary"
+          data-patient-id="${patient.id}"
+        >
+          加入今日門診
+        </button>
+      `;
+
+    const queueHtml =
+      hasAppointment && patient.queueNumber
+        ? `<span class="queue-number">${patient.queueNumber}號</span>`
+        : "";
+
+    const sessionLabelMap = {
+      morning: "早診",
+      afternoon: "下午診",
+      evening: "晚診"
+    };
+
+    const appointmentSessionLabel =
+      sessionLabelMap[patient.appointmentSession] ||
+      patient.appointmentSession ||
+      "";
+
     const appointmentMeta = hasAppointment
-      ? ["下午診", patient.registrationTime ? `${patient.registrationTime} 掛號` : "", patient.visitType].filter(Boolean).join("・")
+      ? [
+          appointmentSessionLabel,
+          patient.appointmentTime
+            ? `${patient.appointmentTime} 掛號`
+            : ""
+        ]
+          .filter(Boolean)
+          .join("・")
       : "目前無今日掛號";
 
     if (patient.linked) {
@@ -133,9 +248,11 @@ function renderPatients() {
         <div class="updated-time">${patient.updated}</div>
 
         <div class="row-action">
+          ${appointmentActionHtml}
+
           ${canViewClinical
-            ? `<a href="#" class="view-button">查看近況 →</a>`
-            : `<span class="empty-value">已連結</span>`
+            ? `<a href="#" class="view-button action-pill action-pill-primary">查看近況</a>`
+            : `<span class="action-pill action-pill-disabled">已連結</span>`
           }
         </div>
       `;
@@ -163,7 +280,11 @@ function renderPatients() {
         <div class="empty-value">—</div>
 
         <div class="row-action">
-          <a href="#" class="connect-button">邀請連結</a>
+          ${appointmentActionHtml}
+
+          <a href="#" class="connect-button action-pill action-pill-secondary">
+            邀請連結
+          </a>
         </div>
       `;
     }

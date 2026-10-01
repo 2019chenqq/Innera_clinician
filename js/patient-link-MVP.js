@@ -93,7 +93,12 @@
   }
 
   async function createPatient({
-    legalName
+    legalName,
+    todayAppointment = false,
+    appointmentDate = "",
+    appointmentSession = "",
+    appointmentTime = "",
+    queueNumber = null
   }) {
     authUser();
 
@@ -111,7 +116,91 @@
         .httpsCallable(
           "createClinicPatient"
         )({
-          legalName: cleanLegalName
+          legalName: cleanLegalName,
+
+          todayAppointment:
+            todayAppointment === true,
+
+          appointmentDate:
+            String(appointmentDate || "").trim(),
+
+          appointmentSession:
+            String(appointmentSession || "").trim(),
+
+          appointmentTime:
+            String(appointmentTime || "").trim(),
+
+          queueNumber:
+            Number.isInteger(Number(queueNumber)) &&
+            Number(queueNumber) > 0
+              ? Number(queueNumber)
+              : null
+        });
+
+        if (
+          appointmentSession &&
+          !["morning", "afternoon", "evening"].includes(
+            appointmentSession
+          )
+        ) {
+          throw new HttpsError(
+            "invalid-argument",
+            "門診時段格式不正確。"
+          );
+        }
+
+        if (
+          appointmentTime &&
+          !/^([01]\d|2[0-3]):[0-5]\d$/.test(
+            appointmentTime
+          )
+        ) {
+          throw new HttpsError(
+            "invalid-argument",
+            "掛號時間格式不正確。"
+          );
+        }
+
+    return result.data;
+  }
+
+  async function updatePatientAppointment({
+    patientId,
+    todayAppointment,
+    appointmentDate = "",
+    appointmentSession = "",
+    appointmentTime = "",
+    queueNumber = null
+  }) {
+    authUser();
+
+    const cleanPatientId =
+      String(patientId || "").trim();
+
+    if (!cleanPatientId) {
+      throw new Error("缺少患者編號");
+    }
+
+    const result =
+      await firebase
+        .app()
+        .functions("us-central1")
+        .httpsCallable(
+          "updateClinicPatientAppointment"
+        )({
+          patientId: cleanPatientId,
+          todayAppointment: todayAppointment === true,
+          appointmentDate:
+            String(appointmentDate || "").trim(),
+          appointmentSession:
+            String(appointmentSession || "").trim(),
+          appointmentTime:
+            String(appointmentTime || "").trim(),
+          queueNumber:
+            Number.isInteger(Number(queueNumber)) &&
+            Number(queueNumber) > 0
+              ? Number(queueNumber)
+              : null
         });
 
     return result.data;
@@ -247,6 +336,7 @@
 
   window.InneraPatientLinkMVP = {
     createPatient,
+    updatePatientAppointment,
     createInvite,
     watchPatient,
     getPatient,
