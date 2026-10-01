@@ -1015,7 +1015,7 @@
         </p>
       </div>
 
-      <span
+            <span
         id="clinicSettingActiveStatus"
         class="clinic-setting-badge"
       >
@@ -1027,6 +1027,55 @@
   </div>
 
 </section>
+
+
+<!-- =========================
+     Clinic Audit Log
+========================= -->
+
+<section class="clinic-audit-section">
+
+  <div class="section-header">
+    <div>
+      <h2>操作紀錄</h2>
+      <p>
+        顯示最近 50 筆院所管理操作。
+      </p>
+    </div>
+  </div>
+
+
+  <div
+    id="clinicAuditLoading"
+    class="clinic-audit-message"
+  >
+    正在讀取操作紀錄...
+  </div>
+
+
+  <div
+    id="clinicAuditEmpty"
+    class="clinic-audit-message hidden"
+  >
+    目前尚無操作紀錄。
+  </div>
+
+
+  <div
+    id="clinicAuditError"
+    class="clinic-audit-message error hidden"
+  >
+    無法讀取操作紀錄。
+  </div>
+
+
+  <div
+    id="clinicAuditList"
+    class="clinic-audit-list"
+  ></div>
+
+</section>
+
 </section>
 
 <!-- =========================

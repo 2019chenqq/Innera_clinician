@@ -15,6 +15,7 @@
     window.InneraClinicStaff?.load();
     window.InneraClinicSettings?.load();
     loadPendingInvites();
+    loadAuditLogs();
 
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -56,6 +57,53 @@ function formatInviteExpiry(milliseconds) {
   ).format(date);
 }
 
+function formatAuditTime(milliseconds) {
+
+  if (!milliseconds) return "—";
+
+  const date =
+    new Date(milliseconds);
+
+  if (Number.isNaN(date.getTime())) {
+    return "—";
+  }
+
+  return new Intl.DateTimeFormat(
+    "zh-TW",
+    {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit"
+    }
+  ).format(date);
+}
+
+
+function auditActionLabel(action) {
+
+  const labels = {
+    "staff.create": "新增院所成員",
+    "staff.disable": "停用院所成員",
+    "staff.enable": "重新啟用院所成員",
+    "staff.invite.create": "建立成員邀請",
+    "staff.invite.accept": "接受成員邀請",
+    "staff.invite.revoke": "撤銷成員邀請",
+    "staff.invite.resend": "重新寄送成員邀請",
+    "clinic.create": "建立院所",
+    "clinic.disable": "停用院所",
+    "clinic.enable": "啟用院所",
+    "clinic.settings.update": "更新院所設定",
+    "patient.create": "建立個案",
+    "invite.create": "建立個案邀請",
+    "invite.redeem": "個案接受邀請"
+  };
+
+  return labels[action] ||
+    action ||
+    "未知操作";
+}
 
 function renderPendingInvites(invites) {
 
@@ -191,6 +239,89 @@ function renderPendingInvites(invites) {
     .join("");
 }
 
+function renderAuditLogs(logs) {
+
+  const list =
+    document.getElementById(
+      "clinicAuditList"
+    );
+
+  const loading =
+    document.getElementById(
+      "clinicAuditLoading"
+    );
+
+  const empty =
+    document.getElementById(
+      "clinicAuditEmpty"
+    );
+
+  const error =
+    document.getElementById(
+      "clinicAuditError"
+    );
+
+
+  loading?.classList.add("hidden");
+  error?.classList.add("hidden");
+
+
+  if (!list) return;
+
+
+  list.innerHTML = "";
+
+
+  if (!logs.length) {
+    empty?.classList.remove("hidden");
+    return;
+  }
+
+
+  empty?.classList.add("hidden");
+
+
+  list.innerHTML =
+    logs
+      .map((log) => {
+
+        const success =
+          log.result === "success";
+
+        return `
+          <article class="clinic-audit-row">
+
+            <div class="clinic-audit-time">
+              ${formatAuditTime(
+                log.createdAt
+              )}
+            </div>
+
+            <div class="clinic-audit-actor">
+              <strong>
+                ${log.actorDisplayName || "未知成員"}
+              </strong>
+            </div>
+
+            <div class="clinic-audit-action">
+              ${auditActionLabel(
+                log.action
+              )}
+            </div>
+
+            <div
+              class="clinic-audit-result ${
+                success ? "success" : "failed"
+              }"
+            >
+              ${success ? "成功" : "失敗"}
+            </div>
+
+          </article>
+        `;
+      })
+      .join("");
+}
 
 async function loadPendingInvites() {
 
@@ -245,6 +376,69 @@ async function loadPendingInvites() {
 
     console.error(
       "[Innera] 讀取待接受邀請失敗",
+      err
+    );
+
+
+    loading?.classList.add("hidden");
+    empty?.classList.add("hidden");
+    error?.classList.remove("hidden");
+  }
+}
+
+async function loadAuditLogs() {
+
+  const loading =
+    document.getElementById(
+      "clinicAuditLoading"
+    );
+
+  const empty =
+    document.getElementById(
+      "clinicAuditEmpty"
+    );
+
+  const error =
+    document.getElementById(
+      "clinicAuditError"
+    );
+
+
+  loading?.classList.remove("hidden");
+  empty?.classList.add("hidden");
+  error?.classList.add("hidden");
+
+
+  try {
+
+    const fn =
+      firebase
+        .app()
+        .functions("us-central1")
+        .httpsCallable(
+          "listClinicAuditLogs"
+        );
+
+
+    const result =
+      await fn();
+
+
+    const logs =
+      Array.isArray(
+        result.data?.logs
+      )
+        ? result.data.logs
+        : [];
+
+
+    renderAuditLogs(logs);
+
+
+  } catch (err) {
+
+    console.error(
+      "[Innera] 讀取操作紀錄失敗",
       err
     );
 
@@ -344,10 +538,12 @@ async function loadPendingInvites() {
     hide: hideClinicManagement,
 
     loadPendingInvites,
+    loadAuditLogs,
 
     load: () => {
       window.InneraClinicStaff?.load();
       loadPendingInvites();
+      loadAuditLogs();
     }
   };
 

@@ -425,7 +425,131 @@
     gap: 8px;
   }
 }
+/* =========================
+   Clinic Audit Log
+========================= */
 
+.clinic-audit-section {
+  margin-top: 24px;
+  padding: 24px;
+
+  background: #ffffff;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+}
+
+
+.clinic-audit-list {
+  display: flex;
+  flex-direction: column;
+
+  margin-top: 20px;
+
+  border: 1px solid #e7edf5;
+  border-radius: 14px;
+
+  overflow: hidden;
+}
+
+
+.clinic-audit-row {
+  display: grid;
+
+  grid-template-columns:
+    170px
+    minmax(120px, 1fr)
+    minmax(180px, 2fr)
+    80px;
+
+  align-items: center;
+
+  gap: 18px;
+
+  padding: 15px 18px;
+
+  background: #ffffff;
+
+  border-bottom: 1px solid #edf1f6;
+}
+
+
+.clinic-audit-row:last-child {
+  border-bottom: 0;
+}
+
+
+.clinic-audit-time {
+  color: #64748b;
+
+  font-size: 13px;
+}
+
+
+.clinic-audit-actor strong {
+  color: #172033;
+
+  font-size: 14px;
+}
+
+
+.clinic-audit-action {
+  color: #475569;
+
+  font-size: 14px;
+}
+
+
+.clinic-audit-result {
+  justify-self: end;
+
+  padding: 5px 9px;
+
+  border-radius: 999px;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+
+.clinic-audit-result.success {
+  background: #ecfdf3;
+  color: #15803d;
+}
+
+
+.clinic-audit-result.failed {
+  background: #fff1f2;
+  color: #be123c;
+}
+
+
+.clinic-audit-message {
+  padding: 24px 0;
+
+  color: #64748b;
+
+  text-align: center;
+}
+
+
+.clinic-audit-message.error {
+  color: #b91c1c;
+}
+
+
+@media (max-width: 768px) {
+
+  .clinic-audit-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+
+  .clinic-audit-result {
+    justify-self: start;
+  }
+}
 @media (max-width: 1500px) {
   .clinic-management-page {
     width: calc(100% - 280px);
