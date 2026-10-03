@@ -7,6 +7,25 @@ function formatDetailAverageSleep(value) {
   return match ? `${Number(match[1]).toFixed(1)} hr` : (value || "—");
 }
 
+function formatVisitDate(value) {
+  if (!value) return "";
+
+  const date =
+    typeof value.toDate === "function"
+      ? value.toDate()
+      : value instanceof Date
+        ? value
+        : new Date(value);
+
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return `${String(date.getMonth() + 1).padStart(2, "0")}/${String(
+    date.getDate()
+  ).padStart(2, "0")}`;
+}
+
 let medicationListExpanded = false;
 
 function escapeMedicationText(value) {
@@ -100,361 +119,7 @@ function getClinicalViewModel(patient) {
   };
 }
 
-function ensureClinicalStyles() {
-  if (document.getElementById("inneraClinicalStyles")) return;
-
-  const style = document.createElement("style");
-  style.id = "inneraClinicalStyles";
-  style.textContent = `
-    .clinical-section {
-      margin: 20px 0;
-      padding: 20px;
-      border: 1px solid #e6eaf0;
-      border-radius: 14px;
-      background: #fff;
-    }
-    .clinical-section h3 {
-      margin: 0 0 6px;
-      color: #172238;
-      font-size: 17px;
-    }
-    .clinical-section-copy {
-      margin: 0 0 16px;
-      color: #7a8699;
-      font-size: 13px;
-      line-height: 1.6;
-    }
-    .clinical-period-heading {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 14px;
-    }
-
-    .clinical-period-heading .clinical-section-copy {
-      margin-bottom: 0;
-    }
-
-    .clinical-period-badge {
-      flex: 0 0 auto;
-      padding: 5px 9px;
-      border-radius: 999px;
-      background: #eef3fb;
-      color: #4f76b8;
-      font-size: 11px;
-      font-weight: 800;
-      white-space: nowrap;
-    }
-
-    .clinical-period-summary {
-      display: grid;
-      gap: 0;
-      border-top: 1px solid #edf0f5;
-    }
-
-    .clinical-period-row {
-      display: grid;
-      grid-template-columns: 100px minmax(0, 160px) minmax(0, 1fr);
-      gap: 16px;
-      align-items: center;
-      padding: 14px 0;
-      border-bottom: 1px solid #edf0f5;
-    }
-
-    .clinical-period-row:last-child {
-      border-bottom: 0;
-    }
-
-    .clinical-period-name {
-      color: #172238;
-      font-size: 13px;
-      font-weight: 800;
-    }
-
-    .clinical-period-status {
-      justify-self: start;
-      min-width: 0;
-      max-width: 100%;
-      box-sizing: border-box;
-      padding: 5px 9px;
-      border-radius: 999px;
-      background: #eef3fb;
-      color: #4f76b8;
-      font-size: 11px;
-      font-weight: 800;
-      white-space: normal;
-      overflow-wrap: anywhere;
-      line-height: 1.6;
-    }
-
-    .clinical-period-status.watch {
-      background: #fff5df;
-      color: #a66f17;
-    }
-
-    .clinical-period-status.down {
-      background: #eef4f2;
-      color: #547b70;
-    }
-
-    .clinical-period-status.stable {
-      background: #f3f5f8;
-      color: #667085;
-    }
-
-    .clinical-period-copy {
-      min-width: 0;
-      overflow-wrap: anywhere;
-      color: #465368;
-      font-size: 13px;
-      line-height: 1.7;
-    }
-
-    .clinical-pattern-insight {
-      margin-top: 16px;
-      padding: 14px 16px;
-      border-radius: 12px;
-      background: #f7f9fc;
-      border: 1px solid #edf0f5;
-    }
-
-    .clinical-pattern-insight span {
-      display: block;
-      margin-bottom: 5px;
-      color: #8a95a7;
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: .03em;
-    }
-
-    .clinical-pattern-insight strong {
-      color: #2e3a54;
-      font-size: 13px;
-      line-height: 1.7;
-      font-weight: 700;
-    }
-
-    .clinical-domain-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
-    }
-    .clinical-domain-card {
-      min-width: 0;
-      padding: 15px;
-      border-radius: 12px;
-      background: #f7f9fc;
-      border: 1px solid #edf0f5;
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-    }
-    .clinical-domain-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-    .clinical-domain-name {
-      font-size: 13px;
-      font-weight: 800;
-      color: #2e3a54;
-    }
-    .clinical-domain-status {
-      padding: 4px 8px;
-      border-radius: 999px;
-      background: #eef3fb;
-      color: #4f76b8;
-      font-size: 11px;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-    .clinical-domain-status.watch {
-      background: #fff5df;
-      color: #a66f17;
-    }
-    .clinical-domain-status.down {
-      background: #eef4f2;
-      color: #547b70;
-    }
-    .clinical-domain-summary-label,
-    .clinical-domain-indicator-label {
-      display: block;
-      margin-bottom: 6px;
-      color: #8a95a7;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: .03em;
-    }
-
-    .clinical-domain-summary {
-      margin: 0;
-      color: #465368;
-      font-size: 13px;
-      line-height: 1.65;
-      min-height: 44px;
-    }
-    .clinical-domain-indicators {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 14px;
-      padding-top: 0;
-      align-content: flex-start;
-    }
-    .clinical-domain-indicators span {
-      padding: 4px 7px;
-      border-radius: 7px;
-      background: #fff;
-      color: #7a8699;
-      font-size: 11px;
-      border: 1px solid #e6eaf0;
-    }
-
-    .clinical-domain-indicators .clinical-domain-indicator-label {
-      flex-basis: 100%;
-      padding: 0;
-      border: 0;
-      background: transparent;
-      color: #8a95a7;
-      font-weight: 700;
-    }
-    .clinical-pattern-legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px 14px;
-      margin: 0 0 14px;
-      padding: 10px 12px;
-      border-radius: 10px;
-      background: #f7f9fc;
-      color: #667085;
-      font-size: 12px;
-      line-height: 1.5;
-    }
-
-    .clinical-pattern-legend strong {
-      color: #2e3a54;
-      font-weight: 800;
-    }
-
-    .timeline-kind {
-      display: inline-block;
-      margin-left: 8px;
-      padding: 3px 7px;
-      border-radius: 999px;
-      background: #eef3fb;
-      color: #4f76b8;
-      font-size: 11px;
-      font-weight: 700;
-      vertical-align: middle;
-    }
-
-    .timeline-kind.medication {
-      background: #fff5df;
-      color: #a66f17;
-    }
-
-    .clinical-pattern-wrap {
-      overflow-x: auto;
-    }
-    .clinical-pattern-table {
-      width: 100%;
-      min-width: 760px;
-      border-collapse: collapse;
-      font-size: 12px;
-    }
-    .clinical-pattern-table th,
-    .clinical-pattern-table td {
-      padding: 10px 9px;
-      border-bottom: 1px solid #edf0f5;
-      text-align: center;
-      vertical-align: middle;
-    }
-    .clinical-pattern-table th:first-child,
-    .clinical-pattern-table td:first-child {
-      position: sticky;
-      left: 0;
-      z-index: 1;
-      background: #fff;
-      text-align: left;
-      font-weight: 800;
-      color: #2e3a54;
-    }
-    .clinical-pattern-table thead th {
-      color: #8a95a7;
-      font-weight: 700;
-    }
-    .clinical-detail-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-    .clinical-list {
-      display: grid;
-      gap: 9px;
-      margin-top: 12px;
-    }
-    .clinical-list-row {
-      display: grid;
-      grid-template-columns: minmax(90px, 1fr) minmax(0, 2fr);
-      gap: 10px;
-      align-items: center;
-      padding: 10px 0;
-      border-bottom: 1px solid #edf0f5;
-      font-size: 13px;
-    }
-    .clinical-list-row:last-child { border-bottom: 0; }
-    .clinical-list-name { font-weight: 700; color: #2e3a54; }
-    .clinical-list-muted { color: #7a8699; }
-    .clinical-med-change {
-      padding: 11px 0;
-      border-bottom: 1px solid #edf0f5;
-    }
-    .clinical-med-change:last-child { border-bottom: 0; }
-    .clinical-med-change strong {
-      display: block;
-      color: #2e3a54;
-      font-size: 13px;
-    }
-    .clinical-med-change span,
-    .clinical-med-change p {
-      margin: 3px 0 0;
-      color: #7a8699;
-      font-size: 12px;
-      line-height: 1.55;
-    }
-    @media (max-width: 1100px) {
-      .clinical-domain-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    }
-    @media (max-width: 700px) {
-      .clinical-period-heading {
-        flex-direction: column;
-        gap: 8px;
-      }
-
-      .clinical-period-row {
-        grid-template-columns: 1fr;
-        gap: 7px;
-      }
-
-      .clinical-domain-grid,
-      .clinical-detail-grid { grid-template-columns: 1fr; }
-      .clinical-list-row {
-        grid-template-columns: 1fr auto;
-      }
-      .clinical-list-row .clinical-list-muted {
-        grid-column: 1 / -1;
-      }
-    }
-  `;
-
-  document.head.appendChild(style);
-}
-
 function ensureClinicalSections() {
-  ensureClinicalStyles();
 
   let root = document.getElementById("clinicalDataLayer");
   if (root) return root;
@@ -466,9 +131,27 @@ function ensureClinicalSections() {
       <div class="clinical-period-heading">
         <div>
           <h3>期間變化</h3>
-          <p class="clinical-section-copy">整理近期有足夠資料支持的面向，快速掌握本次回診前的重要變化。</p>
+          <p class="clinical-section-copy">
+            整理近期有足夠資料支持的面向，快速掌握本次回診前的重要變化。
+          </p>
         </div>
-        <span class="clinical-period-badge">近 30 日</span>
+
+        <div class="clinical-period-actions">
+          <span
+            id="clinicalPeriodBadge"
+            class="clinical-period-badge"
+          >
+            本次回診區間
+          </span>
+
+          <button
+            type="button"
+            id="refreshClinicalSummaryButton"
+            class="clinical-summary-refresh"
+          >
+            重新整理 AI 摘要
+          </button>
+        </div>
       </div>
 
       <div id="clinicalPeriodSummary" class="clinical-period-summary"></div>
@@ -503,13 +186,39 @@ function ensureClinicalSections() {
     eventMount.appendChild(eventCard);
   }
 
+    document
+      .getElementById("refreshClinicalSummaryButton")
+      ?.addEventListener("click", async () => {
+        const patient = patients.find(
+          (item) => item.id === state.activePatientId
+        );
+
+        if (!patient) {
+          showToast("找不到目前個案");
+          return;
+        }
+
+        await refreshClinicalSummary(patient);
+      });
+
   return root;
 }
 
 function renderClinicalPeriodSummary(patient, clinical) {
   const target = document.getElementById("clinicalPeriodSummary");
   if (!target) return;
+  const periodBadge =
+    document.getElementById("clinicalPeriodBadge");
 
+  if (periodBadge) {
+    const startText = formatVisitDate(patient?.lastVisitAt);
+    const endText = formatVisitDate(new Date());
+
+    periodBadge.textContent =
+      startText
+        ? `${startText}–${endText}`
+        : "本次回診區間";
+  }
   const domains = clinical?.domains || {};
 
   const domainConfig = [
@@ -782,6 +491,68 @@ function renderClinicalMedicationChanges(changes = []) {
   `).join("");
 }
 
+async function refreshClinicalSummary(patient) {
+  if (!patient?.id) return;
+
+  const button =
+    document.getElementById("refreshClinicalSummaryButton");
+
+  if (!window.InneraFirebase?.generatePatientClinicalSummary) {
+    showToast("AI 摘要功能尚未載入");
+    return;
+  }
+
+  const originalText =
+    button?.textContent || "重新整理 AI 摘要";
+
+  try {
+    if (button) {
+      button.disabled = true;
+      button.textContent = "AI 整理中…";
+    }
+
+    const clinicId =
+      patient.clinicId ||
+      window.INNERA_ACTIVE_CLINIC_ID;
+
+    const summary =
+      await window.InneraFirebase.generatePatientClinicalSummary({
+        patientId: patient.id,
+        clinicId,
+        startDate: patient.lastVisitAt
+      });
+
+    if (!summary) {
+      throw new Error("AI 未回傳摘要");
+    }
+
+    patient.aiSummary = summary;
+
+    renderPatientDetail(patient);
+
+    showToast("AI 摘要已更新");
+  } catch (error) {
+    console.error(
+      "[Innera] AI 摘要重新整理失敗：",
+      error
+    );
+
+    showToast(
+      error?.message || "AI 摘要更新失敗"
+    );
+  } finally {
+    const currentButton =
+      document.getElementById(
+        "refreshClinicalSummaryButton"
+      );
+
+    if (currentButton) {
+      currentButton.disabled = false;
+      currentButton.textContent = originalText;
+    }
+  }
+}
+
 function renderClinicalDataLayer(patient) {
   ensureClinicalSections();
 
@@ -797,7 +568,7 @@ function showDashboard() {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-function showPatientDetail(patient) {
+async function showPatientDetail(patient) {
   if (!canViewClinicalData()) {
     showToast("臨床資料僅限醫師查看");
     return;
@@ -818,6 +589,11 @@ function showPatientDetail(patient) {
 
   closeDrawer();
   window.scrollTo({ top: 0, behavior: "smooth" });
+
+  // 尚無 AI 摘要時，第一次開啟個案自動產生
+  if (!patient.aiSummary) {
+    await refreshClinicalSummary(patient);
+  }
 }
 
 function renderPatientDetail(patient) {
