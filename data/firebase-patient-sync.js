@@ -138,6 +138,9 @@
       updatedAt: data.updatedAt || null,
       updated: linked ? formatUpdatedTime(data.updatedAt) : "—",
 
+      // 上次實際回診時間，用來決定本次資料整理區間
+      lastVisitAt: data.lastVisitAt || null,
+
       firebaseUid: data.firebaseUid || null,
       clinicId: data.clinicId || getClinicId(),
 

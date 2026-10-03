@@ -105,13 +105,13 @@ function isImportantHealthEvent(event) {
         ] = await Promise.all([
           InneraFirebase.getPatientHealthEvents({
             patientId,
-            days: 30,
+            startDate: patient.lastVisitAt,
             clinicId
           }),
 
           InneraFirebase.getPatientDailyCheckIns({
             patientId,
-            days: 30,
+            startDate: patient.lastVisitAt,
             clinicId
           }),
 
@@ -204,6 +204,7 @@ function isImportantHealthEvent(event) {
           ? formatEmotions(latest.emotions, 99)
           : "—";
         patient.symptoms = latest.symptoms;
+
         const seen = new Set();
 
         const importantEvents = healthEvents
@@ -227,6 +228,12 @@ function isImportantHealthEvent(event) {
           text: event.note || "",
           type: "快速紀錄"
         }));
+      } else {
+        patient.currentMoodCompact = "—";
+        patient.currentMoodDrawer = "—";
+        patient.currentMood = "—";
+        patient.symptoms = [];
+        patient.events = [];
       }
       // Do not overwrite a newly generated summary with an older in-flight read.
       if (patient.aiSummary === previousSummary) patient.aiSummary = aiSummary || null;
@@ -242,10 +249,34 @@ function isImportantHealthEvent(event) {
       patient.quick.avgMood = moodValues.length
         ? `${(moodValues.reduce((sum, value) => sum + value, 0) / moodValues.length).toFixed(1)} / 5`
         : "—";
+
+      const visitStart =
+        patient.lastVisitAt?.toDate
+          ? patient.lastVisitAt.toDate()
+          : patient.lastVisitAt
+            ? new Date(patient.lastVisitAt)
+            : null;
+
+      const today = new Date();
+
+      const visitDays =
+        visitStart instanceof Date &&
+        !Number.isNaN(visitStart.getTime())
+          ? Math.max(
+              1,
+              Math.ceil(
+                (today - visitStart) / (1000 * 60 * 60 * 24)
+              ) + 1
+            )
+          : null;
+
       const distinctDays = new Set(
         dailyCheckIns.map((item) => item.date?.toISOString().slice(0, 10)).filter(Boolean)
       ).size;
-      patient.quick.days = `${distinctDays} / 30`;
+      patient.quick.days =
+        visitDays
+          ? `${distinctDays} / ${visitDays}`
+          : `${distinctDays}`;
 
       if (typeof renderPatients === "function") renderPatients();
       const detailPage = document.getElementById("patientDetailPage");

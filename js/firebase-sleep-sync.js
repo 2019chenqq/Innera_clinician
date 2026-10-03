@@ -7,7 +7,7 @@
   let syncInProgress = false;
   let syncPending = false;
   let lastSyncedUid = null;
-async function getPatientSleepRecords(patientId, clinicId, days = 30) {
+async function getPatientSleepRecords(patientId, clinicId, startDate) {
   if (!patientId) {
     throw new Error("patientId 不可為空。");
   }
@@ -47,22 +47,53 @@ console.log("[Sleep Debug] clinicId =", clinicId);
 
   // 2. 讀取患者分享給目前院所的睡眠資料
   const snapshot = await db
-  .collection("clinicalShares")
-  .doc(patientUid)
-  .collection("clinics")
-  .doc(clinicId)
-  .collection("sleepRecords")
-  .limit(days)
-  .get();
+    .collection("clinicalShares")
+    .doc(patientUid)
+    .collection("clinics")
+    .doc(clinicId)
+    .collection("sleepRecords")
+    .get();
 
   // 趨勢圖要由舊到新排列
-  return snapshot.docs
+  const since =
+    startDate?.toDate
+      ? startDate.toDate()
+      : startDate
+        ? new Date(startDate)
+        : null;
+
+  if (
+    since instanceof Date &&
+    !Number.isNaN(since.getTime())
+  ) {
+    since.setHours(0, 0, 0, 0);
+  }
+
+  const records = snapshot.docs
     .map((doc) => ({
       id: doc.id,
       ...doc.data()
     }))
+    .filter((record) => {
+      if (!since) return true;
+
+      const recordDate =
+        record.date?.toDate
+          ? record.date.toDate()
+          : record.date
+            ? new Date(record.date)
+            : new Date(record.id);
+
+      return (
+        recordDate instanceof Date &&
+        !Number.isNaN(recordDate.getTime()) &&
+        recordDate >= since
+      );
+    })
     .sort((a, b) => a.id.localeCompare(b.id));
-}
+
+  return records;
+  }
   async function syncRealSleepData() {
     if (syncInProgress) {
       syncPending = true;
@@ -91,7 +122,11 @@ console.log("[Sleep Debug] clinicId =", clinicId);
         try {
           const patientId = patient.id;
           const clinicId = patient.clinicId || window.INNERA_ACTIVE_CLINIC_ID;
-          const records = await getPatientSleepRecords(patientId, clinicId, 30);
+          const records = await getPatientSleepRecords(
+            patientId,
+            clinicId,
+            patient.lastVisitAt
+          );
           if (!list.includes(patient)) continue;
           const summary = inneraFirebase.calculateSleepSummary(records);
           const data = { records, summary };

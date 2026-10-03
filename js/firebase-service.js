@@ -95,6 +95,19 @@
     return new Date(value);
   }
 
+  function normalizeStartDate(value) {
+    if (!value) return null;
+
+    const date = timestampToDate(value);
+
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+      return null;
+    }
+
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }
+
   function formatDateId(date) {
     if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "";
     const y = date.getFullYear();
@@ -165,7 +178,7 @@
 
   async function getPatientRecentSleepRecords({
     patientId,
-    days = 30,
+    startDate,
     clinicId
   } = {}) {
     if (!getAuth().currentUser) {
@@ -205,28 +218,48 @@
     }
 
     const snapshot =
-  await guardedFirestoreRead(
-    "patient-sleep",
-    () =>
-      getDb()
-        .collection("clinicalShares")
-        .doc(patient.firebaseUid)
-        .collection("clinics")
-        .doc(targetClinicId)
-        .collection("sleepRecords")
-        .get()
-  );
+      await guardedFirestoreRead(
+        "patient-sleep",
+        () =>
+          getDb()
+            .collection("clinicalShares")
+            .doc(patient.firebaseUid)
+            .collection("clinics")
+            .doc(targetClinicId)
+            .collection("sleepRecords")
+            .get()
+      );
+
+    const since = normalizeStartDate(startDate);
 
     const records = snapshot.docs
       .map(normalizeSleepDoc)
+      .filter((record) => {
+        if (!since) return true;
+
+        const recordDate =
+          record.date instanceof Date
+            ? record.date
+            : timestampToDate(record.date);
+
+        return (
+          recordDate instanceof Date &&
+          !Number.isNaN(recordDate.getTime()) &&
+          recordDate >= since
+        );
+      })
       .sort((a, b) =>
         a.id.localeCompare(b.id)
       );
 
-    return records.slice(-days);
-  }
+      return records;
+    }
 
-  async function getPatientHealthEvents({ patientId, days = 30, clinicId } = {}) {
+  async function getPatientHealthEvents({
+    patientId,
+    startDate,
+    clinicId
+  } = {}) {
     if (!getAuth().currentUser) throw new Error("尚未登入 Firebase。");
     if (!patientId) throw new Error("patientId 不可為空");
     const patientSnap =
@@ -248,27 +281,30 @@
     if (!targetClinicId) {
       throw new Error("缺少 clinicId");
     }
-    const since = new Date();
-    since.setHours(0, 0, 0, 0);
-    since.setDate(since.getDate() - Math.max(0, days - 1));
+    const since = normalizeStartDate(startDate);
+    let query = getDb()
+      .collection("clinicalShares")
+      .doc(patient.firebaseUid)
+      .collection("clinics")
+      .doc(targetClinicId)
+      .collection("healthEvents");
+
+    if (since) {
+      query = query.where(
+        "timestamp",
+        ">=",
+        firebase.firestore.Timestamp.fromDate(since)
+      );
+    }
+
+    query = query.orderBy("timestamp", "desc");
+
     const snapshot =
-    await guardedFirestoreRead(
-      "patient-health-events",
-      () =>
-        getDb()
-          .collection("clinicalShares")
-          .doc(patient.firebaseUid)
-          .collection("clinics")
-          .doc(targetClinicId)
-          .collection("healthEvents")
-          .where(
-            "timestamp",
-            ">=",
-            firebase.firestore.Timestamp.fromDate(since)
-          )
-          .orderBy("timestamp", "desc")
-          .get()
-    );
+      await guardedFirestoreRead(
+        "patient-health-events",
+        () => query.get()
+      );
+
     return snapshot.docs.map((doc) => {
       const data = doc.data();
       return {
@@ -282,7 +318,11 @@
     });
   }
 
-  async function getPatientDailyCheckIns({ patientId, days = 30, clinicId } = {}) {
+  async function getPatientDailyCheckIns({
+    patientId,
+    startDate,
+    clinicId
+  } = {}) {
     if (!getAuth().currentUser) throw new Error("尚未登入 Firebase。");
     if (!patientId) throw new Error("patientId 不可為空");
     const patientSnap =
@@ -304,27 +344,28 @@
     if (!targetClinicId) {
       throw new Error("缺少 clinicId");
     }
-    const since = new Date();
-    since.setHours(0, 0, 0, 0);
-    since.setDate(since.getDate() - Math.max(0, days - 1));
+    const since = normalizeStartDate(startDate);
+    let query = getDb()
+      .collection("clinicalShares")
+      .doc(patient.firebaseUid)
+      .collection("clinics")
+      .doc(targetClinicId)
+      .collection("dailyCheckIns");
+
+    if (since) {
+      query = query.where(
+        "date",
+        ">=",
+        firebase.firestore.Timestamp.fromDate(since)
+      );
+    }
+
+    query = query.orderBy("date", "desc");
     const snapshot =
-    await guardedFirestoreRead(
-      "patient-daily-checkins",
-      () =>
-        getDb()
-          .collection("clinicalShares")
-          .doc(patient.firebaseUid)
-          .collection("clinics")
-          .doc(targetClinicId)
-          .collection("dailyCheckIns")
-          .where(
-            "date",
-            ">=",
-            firebase.firestore.Timestamp.fromDate(since)
-          )
-          .orderBy("date", "desc")
-          .get()
-    );
+      await guardedFirestoreRead(
+        "patient-daily-checkins",
+        () => query.get()
+      );
     return snapshot.docs.map((doc) => {
       const data = doc.data();
       return {
@@ -396,6 +437,71 @@ async function getPatientAiSummary({
 
   return summarySnap.data();
 }
+
+  async function generatePatientClinicalSummary({
+    patientId,
+    startDate,
+    clinicId
+  } = {}) {
+    if (!getAuth().currentUser) {
+      throw new Error("尚未登入 Firebase。");
+    }
+
+    if (!patientId) {
+      throw new Error("patientId 不可為空");
+    }
+
+    const patientSnap = await guardedFirestoreRead(
+      "patient-lookup-generate-ai-summary",
+      () =>
+        getDb()
+          .collection("inneraPatients")
+          .doc(patientId)
+          .get()
+    );
+
+    if (!patientSnap.exists) {
+      throw new Error(`找不到患者：${patientId}`);
+    }
+
+    const patient = patientSnap.data();
+
+    if (!patient.linked || !patient.firebaseUid) {
+      throw new Error("此患者尚未連結心域");
+    }
+
+    const targetClinicId =
+      clinicId ||
+      patient.clinicId ||
+      window.INNERA_ACTIVE_CLINIC_ID;
+
+    if (!targetClinicId) {
+      throw new Error("缺少 clinicId");
+    }
+
+    const callable = firebase
+      .functions()
+      .httpsCallable("generateClinicalSummary");
+
+    const normalizedStartDate =
+  startDate?.toDate
+    ? startDate.toDate()
+    : startDate
+      ? new Date(startDate)
+      : null;
+
+    const result = await callable({
+      uid: patient.firebaseUid,
+      clinicId: targetClinicId,
+      startDate:
+        normalizedStartDate &&
+        !Number.isNaN(normalizedStartDate.getTime())
+          ? normalizedStartDate.toISOString()
+          : null
+    });
+
+    return result.data?.summary || null;
+  }
 
   async function getPatientMedications({
     patientId,
@@ -509,6 +615,7 @@ async function getPatientAiSummary({
     getPatientHealthEvents,
     getPatientDailyCheckIns,
     getPatientAiSummary,
+    generatePatientClinicalSummary,
     getPatientMedications,
 
     calculateSleepSummary,
