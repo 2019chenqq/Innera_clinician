@@ -15,6 +15,7 @@ const DEMO_UID = "LoRfGVtuzHU5V6qwOL4XzbHhRZK2";
 const DEMO_CLINIC_ID = "lyuA5LbAHkgvgjn9y6oF";
 const DEMO_PATIENT_ID = "P000005";
 const DEMO_PATIENT_NAME = "林○安";
+const DEMO_LAST_VISIT_DAYS_AGO = 21;
 
 function assertConfigured() {
   for (const [key, value] of Object.entries({
@@ -166,6 +167,14 @@ function healthEventsForDates(dates) {
 async function ensureDemoPatient() {
   const ref = db.collection("inneraPatients").doc(DEMO_PATIENT_ID);
 
+  const today = startOfDay(new Date());
+
+  const lastVisitDate = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate() - DEMO_LAST_VISIT_DAYS_AGO
+  );
+
   await ref.set({
     patientId: DEMO_PATIENT_ID,
     legalName: DEMO_PATIENT_NAME,
@@ -181,6 +190,7 @@ async function ensureDemoPatient() {
     appointmentTime: "15:00",
     visitType: "複診",
 
+    lastVisitAt: toTimestamp(lastVisitDate),
     source: "demo_seed",
     updatedAt: SERVER_TS
   }, { merge: true });
@@ -330,6 +340,7 @@ async function seed() {
     legalName: patient.legalName || "",
     clinicId: DEMO_CLINIC_ID,
     uid: DEMO_UID,
+    lastVisitAt: `${DEMO_LAST_VISIT_DAYS_AGO} 天前`,
     sleepRecords: 30,
     dailyCheckIns: 30,
     healthEvents: 6,
