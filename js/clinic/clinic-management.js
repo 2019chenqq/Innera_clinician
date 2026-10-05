@@ -2,6 +2,15 @@
 (function () {
   "use strict";
 
+  const Core = window.InneraClinicCore;
+
+  function isClinicAdmin(staff) {
+    return (
+      staff?.role === "admin" ||
+      staff?.role === "clinic_admin"
+    );
+  }
+
   function showClinicManagement() {
     document.getElementById("dashboardMain")?.classList.add("hidden");
     document.getElementById("patientDetailPage")?.classList.add("hidden");
@@ -14,8 +23,31 @@
 
     window.InneraClinicStaff?.load();
     window.InneraClinicSettings?.load();
-    loadPendingInvites();
-    loadAuditLogs();
+
+    const currentStaff =
+      Core.getCurrentStaff();
+
+    const isAdmin =
+      isClinicAdmin(currentStaff);
+
+    const pendingSection =
+      document.getElementById("clinicPendingInvitesSection")
+
+    const auditSection =
+      document.querySelector(
+        ".clinic-audit-section"
+      );
+
+    if (isAdmin) {
+      pendingSection?.classList.remove("hidden");
+      auditSection?.classList.remove("hidden");
+
+      loadPendingInvites();
+      loadAuditLogs();
+    } else {
+      pendingSection?.classList.add("hidden");
+      auditSection?.classList.add("hidden");
+    }
 
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -403,6 +435,11 @@ async function loadAuditLogs() {
       "clinicAuditError"
     );
 
+  const list =
+    document.getElementById(
+      "clinicAuditList"
+    );
+
 
   loading?.classList.remove("hidden");
   empty?.classList.add("hidden");
@@ -542,8 +579,14 @@ async function loadAuditLogs() {
 
     load: () => {
       window.InneraClinicStaff?.load();
-      loadPendingInvites();
-      loadAuditLogs();
+
+      const currentStaff =
+        Core.getCurrentStaff();
+
+      if (isClinicAdmin(currentStaff)) {
+        loadPendingInvites();
+        loadAuditLogs();
+      }
     }
   };
 
