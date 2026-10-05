@@ -841,7 +841,7 @@
           }
 
           if (passwordInput) {
-            passwordInput.value = "555555";
+            passwordInput.value = "20192019";
           }
 
           setLoginError("");
