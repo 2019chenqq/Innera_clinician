@@ -11,6 +11,9 @@ window.INNERA_FIREBASE_CONFIG = {
   appId: "1:37801791582:web:61c4f41594ddd411fae4cf"
 };
 
+window.INNERA_APP_CHECK_SITE_KEY =
+  "6LeIS-AtAAAAAHXPqqyZMEI3ly8gIjmpPtuQXWJI";
+
 // 目前測試用院所 ID，要跟 App 端 ClinicalShareService 寫入時一致。
 window.INNERA_DEMO_CLINIC_ID = "innera-demo-clinic";
 

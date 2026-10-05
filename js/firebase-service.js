@@ -41,6 +41,8 @@
       app = firebase.app();
     }
 
+    window.INNERA_INIT_APP_CHECK?.(app);
+
     auth = firebase.auth();
     db = firebase.firestore();
 

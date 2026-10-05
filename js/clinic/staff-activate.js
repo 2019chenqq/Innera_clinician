@@ -628,6 +628,8 @@
     // 2. 從 URL 取得 invite / token
     // -----------------------------------------------------
 
+    window.INNERA_INIT_APP_CHECK?.(firebase.app());
+
     const {
       inviteId,
       token
@@ -792,6 +794,10 @@
       );
     }
 
+
+    if (typeof firebase !== "undefined" && firebase.apps.length) {
+      window.INNERA_INIT_APP_CHECK?.(firebase.app());
+    }
 
     // 如果是從 Email Link 進來，
     // 先完成 Firebase sign-in / Email verification。
