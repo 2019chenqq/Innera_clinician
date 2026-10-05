@@ -41,7 +41,12 @@
       </div>
 
       <div class="login-copy">
+        <span class="demo-badge">MVP DEMO</span>
         <h2>每一個因資訊不完整而未被理解的個案，都可能在下一次回診前悄悄離開。</h2>
+        <p>
+          此版本為前端流程原型，目前使用模擬個案資料，
+          用來測試登入、門診列表、近況摘要與完整個案資料瀏覽流程。
+        </p>
       </div>
 
       <form id="loginForm" class="login-form">
@@ -75,6 +80,9 @@
   </button>
 
   <small id="loginError"></small>
+  <button type="button" id="fillDemoLogin">
+      使用展示帳號
+  </button>
 </form>
     </section>
 
@@ -621,6 +629,13 @@
 
   </div>
 
+  <div class="data-notice detail-notice">
+    <div class="data-notice-icon">i</div>
+    <div>
+      <strong>目前為 Demo 模擬資料</strong>
+      <p>完整個案頁用來驗證醫師資訊瀏覽流程；之後可將同一介面改接心域 App / Firebase 真實資料。</p>
+    </div>
+  </div>
 
 </section>
 
@@ -1591,7 +1606,7 @@
 
 <script defer src="js/patient-link-MVP.js"></script>
 
-<script defer src="js/firebase-config-prod.js"></script>
+<script defer src="js/firebase-config-demo.js"></script>
 <script defer src="js/firebase-service.js"></script>
 
 <script defer src="data/patients.js"></script>

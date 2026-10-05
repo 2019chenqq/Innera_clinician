@@ -139,9 +139,7 @@
 
 
       const activationUrl =
-        new URL(
-          "https://2019chenqq.github.io/Innera_clinician/staff-activate.html"
-        );
+        new URL(window.INNERA_ENV.activationUrl);
 
 
       activationUrl.searchParams.set(
@@ -556,9 +554,7 @@ async function updateClinicStaffRole(
 
 
       const activationUrl =
-        new URL(
-          "https://2019chenqq.github.io/Innera_clinician/staff-activate.html"
-        );
+        new URL(window.INNERA_ENV.activationUrl);
 
 
       activationUrl.searchParams.set(

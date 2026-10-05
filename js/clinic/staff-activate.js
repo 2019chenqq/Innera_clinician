@@ -526,10 +526,10 @@
         // Firebase action code 已使用完成，
         // 把網址整理回乾淨的 invitation URL。
         const cleanUrl =
-        new URL(
-            "staff-activate.html",
-            window.location.href
-        );
+          new URL(
+              window.INNERA_ENV.activationUrl,
+              window.location.href
+          );
 
 
         cleanUrl.searchParams.set(
