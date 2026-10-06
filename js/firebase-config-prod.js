@@ -11,6 +11,9 @@ window.INNERA_FIREBASE_CONFIG = {
   appId: "1:510475967619:web:c21c9d28fd763507c2cfb6"
 };
 
+window.INNERA_APP_CHECK_SITE_KEY =
+  "6LefYOEtAAAAAI56jGMQikdpgBLYm4yJoSsrFM2Z";
+
 window.INNERA_ENV = {
   activationUrl: "https://clinician.innerahealthcare.com/staff-activate.html"
 };
