@@ -1,6 +1,7 @@
 "use strict";
 
 (function () {
+  const expectedProjectId = document.currentScript?.dataset.projectId || "innera-demo";
   const config = window.INNERA_FIREBASE_CONFIG;
   const siteKey = window.INNERA_APP_CHECK_SITE_KEY;
   const sdk = window.firebase;
@@ -101,9 +102,9 @@
   diagnostic();
   try {
     if (!config || typeof siteKey !== "string" || !siteKey.trim()) {
-      throw new Error("Missing Demo Firebase config or App Check site key.");
+      throw new Error("Missing Firebase config or App Check site key.");
     }
-    if (config.projectId !== "innera-demo") throw new Error("Test page requires innera-demo.");
+    if (config.projectId !== expectedProjectId) throw new Error(`Test page requires ${expectedProjectId}.`);
     phase = "firebase-init";
     if (!sdk || typeof sdk.initializeApp !== "function") throw new Error("Firebase app SDK not loaded.");
     if (sdk.apps.length) throw new Error("Unexpected existing Firebase app on isolated test page.");
