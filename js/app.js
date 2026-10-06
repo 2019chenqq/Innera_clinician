@@ -1,10 +1,4 @@
 
-
-
-
-
-
-
 attachPatientDetails(patients);
 
 initDashboard();
