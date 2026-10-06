@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo App Check Test</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 850px; margin: 32px auto; padding: 0 20px; }
+    dt { font-weight: 600; margin-top: 16px; }
+    dd { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+    pre { background: #f3f4f6; padding: 16px; white-space: pre-wrap; overflow-wrap: anywhere; }
+    button { padding: 10px 16px; margin: 16px 0; }
+  </style>
+  <script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-check-compat.js"></script>
+  <script defer src="js/firebase-config-prod.js"></script>
+  <script defer src="js/app-check-test.js"></script>
+</head>
+<body>
+  <h1>Demo App Check Test</h1>
+  <p>只測試 ReCaptchaEnterpriseProvider 與 getToken(true)。完整 token 不會顯示或記錄。</p>
+  <dl aria-live="polite">
+    <dt>Firebase projectId</dt><dd id="project-id">等待載入</dd>
+    <dt>App Check site key exists</dt><dd id="site-key-exists">等待載入</dd>
+    <dt>Firebase init</dt><dd id="firebase-status">未初始化</dd>
+    <dt>App Check init</dt><dd id="app-check-status">未初始化</dd>
+    <dt>Token result</dt><dd id="token-result">尚未測試</dd>
+    <dt>Error name</dt><dd id="error-name">—</dd>
+    <dt>Error code</dt><dd id="error-code">—</dd>
+    <dt>Error message</dt><dd id="error-message">—</dd>
+    <dt>Error customData</dt><dd id="error-data">—</dd>
+  </dl>
+  <button id="retry-token" type="button" disabled>Retry getToken(true)</button>
+  <h2>Diagnostic</h2>
+  <pre id="diagnostic">等待載入</pre>
+</body>
+</html>
